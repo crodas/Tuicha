@@ -11,6 +11,8 @@ php:
   - hhvm-3.9
   - hhvm-3.12
 
+php: hhvm
+
 env:
   global:
     - KEY_SERVER="hkp://keyserver.ubuntu.com:80"
@@ -25,18 +27,6 @@ env:
 matrix:
   fast_finish: true
   include:
-    - php: hhvm-3.3
-      env: IS_HHVM=1
-
-    - php: hhvm-3.6
-      env: IS_HHVM=1
-
-    - php: hhvm-3.9
-      env: IS_HHVM=1
-
-    - php: hhvm-3.12
-      env: IS_HHVM=1
-
     - php: 7.0
       env: DRIVER_VERSION=1.2.0 SERVER_VERSION=2.4
     - php: 7.0

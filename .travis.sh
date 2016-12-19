@@ -16,7 +16,7 @@ if dpkg --compare-versions ${SERVER_VERSION} le "2.4"; then export SERVER_SERVIC
 if ! nc -z localhost 27017; then sudo service ${SERVER_SERVICE} start; fi
 mongod --version
 
-if [ "$IS_HHVM" == "1" ]
+if [ "$TRAVIS_PHP_VERSION" == "hhvm" ]
 then 
     FILE=${DRIVER_VERSION}.tar.gz
     DIR=mongo-hhvm-driver-${DRIVER_VERSION}
@@ -32,7 +32,6 @@ then
 else
     phpenv config-rm xdebug.ini
     pecl install -f mongodb-${DRIVER_VERSION}
-    if dpkg --compare-versions ${SERVER_VERSION} le "2.4"; then export SERVER_SERVICE=mongodb; else export SERVER_SERVICE=mongod; fi
     php --ri mongodb
 fi
 
