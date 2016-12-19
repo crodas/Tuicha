@@ -33,12 +33,9 @@ then
     sudo update-alternatives --set gcc /usr/bin/gcc-4.8
     
 
-    FILE=${DRIVER_VERSION}.tar.gz
-    DIR=mongo-hhvm-driver-${DRIVER_VERSION}
-    wget https://github.com/mongodb/mongo-hhvm-driver/archive/${FILE}
-    tar xfz $FILE
-    
-    cd $DIR
+    git clone https://github.com/mongodb/mongo-hhvm-driver.git --recursive
+    cd mongo-hhvm-driver
+    git checkout -f $DRIVER_VERSION
     
     cd libbson; ./autogen.sh > /dev/null; cd - 
     cd libmongoc ; ./autogen.sh > /dev/null; cd -
