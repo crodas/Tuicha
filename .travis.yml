@@ -51,7 +51,7 @@ matrix:
       env: DRIVER_VERSION=stable SERVER_VERSION=3.0
 
 before_install:
-  - ./.travis.sh
+  - sudo ./.travis.sh
 
 script:
   - phpunit tests
