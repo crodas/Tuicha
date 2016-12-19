@@ -18,18 +18,15 @@ mongod --version
 
 if [[ $TRAVIS_PHP_VERSION =~ ^hhvm ]]
 then 
-    sudo apt-get install -y cmake
-    git clone git://github.com/facebook/hhvm.git
-    cd hhvm && git checkout 1da451b && cd -  # Tag:3.0.1
-    export HPHP_HOME=`pwd`/hhvm
+    sudo apt-get install hhvm-dev -y
 
     FILE=${DRIVER_VERSION}.tar.gz
     DIR=mongo-hhvm-driver-${DRIVER_VERSION}
     wget https://github.com/mongodb/mongo-hhvm-driver/archive/${FILE}
-    tar xfvz $FILE
+    tar xfz $FILE
+    
     cd $DIR
-    $HPHP_HOME/hphp/tools/hphpize/hphpize
-
+    hphpize
     cmake .
     make configlib
     make -j 4
