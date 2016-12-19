@@ -39,6 +39,10 @@ then
     tar xfz $FILE
     
     cd $DIR
+    
+    cd libbson; ./autogen.sh > /dev/null; cd - 
+    cd libmongoc ; ./autogen.sh > /dev/null; cd -
+    
     hphpize
     cmake .
     make configlib
