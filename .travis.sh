@@ -16,14 +16,20 @@ if dpkg --compare-versions ${SERVER_VERSION} le "2.4"; then export SERVER_SERVIC
 if ! nc -z localhost 27017; then sudo service ${SERVER_SERVICE} start; fi
 mongod --version
 
-if [ "$TRAVIS_PHP_VERSION" == "hhvm" ]
+if [[ $TRAVIS_PHP_VERSION =~ ^hhvm ]]
 then 
+    sudo apt-get install -y cmake
+    git clone git://github.com/facebook/hhvm.git
+    cd hhvm && git checkout 1da451b && cd -  # Tag:3.0.1
+    export HPHP_HOME=`pwd`/hhvm
+
     FILE=${DRIVER_VERSION}.tar.gz
     DIR=mongo-hhvm-driver-${DRIVER_VERSION}
     wget https://github.com/mongodb/mongo-hhvm-driver/archive/${FILE}
     tar xfvz $FILE
     cd $DIR
-    hphpize
+    $HPHP_HOME/hphp/tools/hphpize/hphpize
+
     cmake .
     make configlib
     make -j 4
