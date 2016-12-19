@@ -1,3 +1,5 @@
+#!/bin/bash -x
+
 # Install MongoDB
 sudo apt-key adv --keyserver ${KEY_SERVER} --recv 7F0CEB10
 sudo apt-key adv --keyserver ${KEY_SERVER} --recv EA312927
