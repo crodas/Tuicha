@@ -48,15 +48,11 @@ then
     sudo dpkg -i libjemalloc-dev_3.6.0-2_amd64.deb
     rm libjemalloc-dev_3.6.0-2_amd64.deb
 
-
-    git clone https://github.com/mongodb/mongo-hhvm-driver.git
+    git clone https://github.com/mongodb/mongo-hhvm-driver.git --branch $DRIVER_VERSION --recursive
     cd mongo-hhvm-driver
-    git checkout -f $DRIVER_VERSION
-    git submodule init
-    git submodule update
     
-    cd libbson; ./autogen.sh > /dev/null; cd ..
-    cd libmongoc ; ./autogen.sh > /dev/null; cd ..
+    #cd libbson; ./autogen.sh > /dev/null; cd ..
+    #cd libmongoc ; ./autogen.sh > /dev/null; cd ..
     
     hphpize
     cmake .
