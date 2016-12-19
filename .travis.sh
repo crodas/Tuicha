@@ -24,6 +24,8 @@ then
     sudo add-apt-repository ppa:mapnik/boost -y
     sudo apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0x5a16e7281be7a449
     
+    echo deb http://dl.hhvm.com/ubuntu precise main | sudo tee /etc/apt/sources.list.d/hhvm.list
+    
     sudo apt-get update
     sudo apt-get install gcc-4.8 g++-4.8 libboost1.55-all-dev hhvm-dev -qqy 
     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 60 \
