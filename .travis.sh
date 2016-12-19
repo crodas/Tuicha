@@ -17,8 +17,21 @@ if ! nc -z localhost 27017; then sudo service ${SERVER_SERVICE} start; fi
 mongod --version
 
 if [[ $TRAVIS_PHP_VERSION =~ ^hhvm ]]
-then 
-    sudo apt-get install hhvm-dev -y
+then
+    sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+    sudo add-apt-repository ppa:boost-latest/ppa -y
+    
+    sudo add-apt-repository ppa:mapnik/boost -y
+    sudo apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0x5a16e7281be7a449
+    
+    sudo apt-get update
+    sudo apt-get install gcc-4.8 g++-4.8 libboost1.55-all-dev hhvm-dev -qqy 
+    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 60 \
+                         --slave /usr/bin/g++ g++ /usr/bin/g++-4.8
+    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.6 40 \
+                         --slave /usr/bin/g++ g++ /usr/bin/g++-4.6
+    sudo update-alternatives --set gcc /usr/bin/gcc-4.8
+    
 
     FILE=${DRIVER_VERSION}.tar.gz
     DIR=mongo-hhvm-driver-${DRIVER_VERSION}
