@@ -32,6 +32,22 @@ then
                          --slave /usr/bin/g++ g++ /usr/bin/g++-4.6
     sudo update-alternatives --set gcc /usr/bin/gcc-4.8
     
+    wget http://launchpadlibrarian.net/80433359/libgoogle-glog0_0.3.1-1ubuntu1_amd64.deb
+    sudo dpkg -i libgoogle-glog0_0.3.1-1ubuntu1_amd64.deb
+    rm libgoogle-glog0_0.3.1-1ubuntu1_amd64.deb
+    wget http://launchpadlibrarian.net/80433361/libgoogle-glog-dev_0.3.1-1ubuntu1_amd64.deb
+    sudo dpkg -i libgoogle-glog-dev_0.3.1-1ubuntu1_amd64.deb
+    rm libgoogle-glog-dev_0.3.1-1ubuntu1_amd64.deb
+
+    # Install libjemalloc
+    wget http://ubuntu.mirrors.tds.net/ubuntu/pool/universe/j/jemalloc/libjemalloc1_3.6.0-2_amd64.deb
+    sudo dpkg -i libjemalloc1_3.6.0-2_amd64.deb
+    rm libjemalloc1_3.6.0-2_amd64.deb
+
+    wget http://ubuntu.mirrors.tds.net/ubuntu/pool/universe/j/jemalloc/libjemalloc-dev_3.6.0-2_amd64.deb
+    sudo dpkg -i libjemalloc-dev_3.6.0-2_amd64.deb
+    rm libjemalloc-dev_3.6.0-2_amd64.deb
+
 
     git clone https://github.com/mongodb/mongo-hhvm-driver.git --recursive
     cd mongo-hhvm-driver
