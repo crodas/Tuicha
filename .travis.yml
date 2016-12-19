@@ -1,5 +1,6 @@
 language: php
 
+sudo: required
 php:
   - 5.4
   - 5.5
@@ -51,7 +52,7 @@ matrix:
       env: DRIVER_VERSION=stable SERVER_VERSION=3.0
 
 before_install:
-  - sudo ./.travis.sh
+  - ./.travis.sh
 
 script:
   - phpunit tests

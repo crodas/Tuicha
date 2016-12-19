@@ -1,19 +1,19 @@
 #!/bin/bash -x
 
 # Install MongoDB
-apt-key adv --keyserver ${KEY_SERVER} --recv 7F0CEB10
-apt-key adv --keyserver ${KEY_SERVER} --recv EA312927
-echo "deb ${MONGO_REPO_URI} ${MONGO_REPO_TYPE}${SERVER_VERSION} multiverse" | tee ${SOURCES_LOC}
-apt-get update -qq
+sudo apt-key adv --keyserver ${KEY_SERVER} --recv 7F0CEB10
+sudo apt-key adv --keyserver ${KEY_SERVER} --recv EA312927
+echo "deb ${MONGO_REPO_URI} ${MONGO_REPO_TYPE}${SERVER_VERSION} multiverse" | sudo tee ${SOURCES_LOC}
+sudo apt-get update -qq
 
 if dpkg --compare-versions ${SERVER_VERSION} le "2.4"; then export SERVER_PACKAGE=mongodb-10gen-enterprise; else export SERVER_PACKAGE=mongodb-enterprise; fi
-apt-get install ${SERVER_PACKAGE}
-apt-get -y install gdb
+sudo apt-get install ${SERVER_PACKAGE}
+sudo apt-get -y install gdb
 
 
 # Start MongoDB
 if dpkg --compare-versions ${SERVER_VERSION} le "2.4"; then export SERVER_SERVICE=mongodb; else export SERVER_SERVICE=mongod; fi
-if ! nc -z localhost 27017; then service ${SERVER_SERVICE} start; fi
+if ! nc -z localhost 27017; then sudo service ${SERVER_SERVICE} start; fi
 mongod --version
 
 if [ "$IS_HHVM" == "1" ]
