@@ -49,19 +49,22 @@ then
     rm libjemalloc-dev_3.6.0-2_amd64.deb
 
 
-    git clone https://github.com/mongodb/mongo-hhvm-driver.git --recursive
+    git clone https://github.com/mongodb/mongo-hhvm-driver.git
     cd mongo-hhvm-driver
     git checkout -f $DRIVER_VERSION
+    git submodule init
+    git submodule update
     
-    cd libbson; ./autogen.sh > /dev/null; cd - 
-    cd libmongoc ; ./autogen.sh > /dev/null; cd -
+    cd libbson; ./autogen.sh > /dev/null; cd ..
+    cd libmongoc ; ./autogen.sh > /dev/null; cd ..
     
     hphpize
     cmake .
     make configlib
-    make -j 4
-    make install
-    cd -
+    make 
+    sudo cp mongodb.so /etc/hhvm
+    echo 'hhvm.dynamic_extensions[mongodb]=/etc/hhvm/mongodb.so' | sudo tee --append /etc/hhvm/php.ini > /dev/null
+    cd ..
 else
     phpenv config-rm xdebug.ini
     pecl install -f mongodb-${DRIVER_VERSION}
