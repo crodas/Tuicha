@@ -58,6 +58,4 @@ before_script:
   - ulimit -c unlimited -S
 
 script:
-  - ./vendor/bin/phpunit --debug || RESULT=$?
-  - for i in $(find ./ -maxdepth 1 -name 'core*' -print); do gdb `php -r 'echo PHP_BINARY;'` core* -ex "thread apply all bt" -ex "set pagination 0" -batch; done;
-  - if [[ ${RESULT} != 0 ]]; then exit $RESULT ; fi;
+  - phpunit tests
