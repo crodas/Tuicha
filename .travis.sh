@@ -47,13 +47,14 @@ then
     wget http://ubuntu.mirrors.tds.net/ubuntu/pool/universe/j/jemalloc/libjemalloc-dev_3.6.0-2_amd64.deb
     sudo dpkg -i libjemalloc-dev_3.6.0-2_amd64.deb
     rm libjemalloc-dev_3.6.0-2_amd64.deb
+    
+    
+    FILE=hhvm-mongodb-${DRIVER_VERSION}.tgz
+    wget https://github.com/mongodb/mongo-hhvm-driver/releases/download/1.2.0/${FILE}
+    tar xfz $FILE
+    cd hhvm-mongodb-${DRIVER_VERSION}
 
-    git clone https://github.com/mongodb/mongo-hhvm-driver.git --branch $DRIVER_VERSION --recursive
-    cd mongo-hhvm-driver
-    
-    #cd libbson; ./autogen.sh > /dev/null; cd ..
-    #cd libmongoc ; ./autogen.sh > /dev/null; cd ..
-    
+
     hphpize
     cmake .
     make configlib
