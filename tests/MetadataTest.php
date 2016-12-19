@@ -20,11 +20,13 @@ class demo1 {
     }
 }
 
+define('demo1_class', 'demo1');
+
 class MetadataTest extends PHPUnit_Framework_TestCase
 {
     public function testLoading()
     {
-        $meta = Metadata::of(demo1::class);
+        $meta = Metadata::of(demo1_class);
         $this->assertTrue($meta instanceof Metadata);
         $this->assertEquals($meta, Metadata::of(new demo1));
         $this->assertEquals($meta->getFile(), __FILE__);
@@ -45,7 +47,7 @@ class MetadataTest extends PHPUnit_Framework_TestCase
     public function testPopulation()
     {
         $rand = uniqid(true);
-        $meta = Metadata::of(Demo1::class);
+        $meta = Metadata::of(demo1_class);
 
         $obj = $meta->newInstance(['_id' => $rand, $rand => $rand]);
         $this->assertTrue($obj instanceof Demo1);
@@ -55,7 +57,7 @@ class MetadataTest extends PHPUnit_Framework_TestCase
     public function testNestedPopulation()
     {
         $rand = uniqid(true);
-        $meta = Metadata::of(Demo1::class);
+        $meta = Metadata::of(demo1_class);
         $obj = $meta->newInstance(['bar' => ['foo' => $rand]]);
         $this->assertNull($obj->id);
         $this->assertTrue($obj->getbar() instanceof Demo2);
@@ -65,7 +67,7 @@ class MetadataTest extends PHPUnit_Framework_TestCase
     public function testRead()
     {
         $rand = uniqid(true);
-        $meta = Metadata::of(Demo1::class);
+        $meta = Metadata::of(demo1_class);
         $obj1 = $meta->newInstance(['bar' => ['foo' => $rand], '_id' => $rand]);
         $arr1 = $meta->toDocument($obj1);
         $this->assertEquals(['_id' => $rand, 'bar' => ['foo' => $rand]], $arr1);
