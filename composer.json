@@ -1,0 +1,23 @@
+{
+    "name": "tuicha/tuicha",
+    "version": "v0.1.1",
+    "authors": [
+        {
+            "name": "Cesar Rodas",
+            "email": "cesar@rodas.me"
+        }
+    ],
+    "minimum-stability": "stable",
+    "autoload": {
+        "classmap": ["src/Tuicha.php"],
+        "psr-0": {
+            "Tuicha": "src/"
+        }
+    },
+    "require": {
+        "crodas/remember": "^0.4.2",
+        "crodas/notoj": "^1.4",
+        "crodas/class-info": "^0.2.3",
+        "doctrine/inflector": "^1.1"
+    }
+}

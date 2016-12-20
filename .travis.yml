@@ -1,0 +1,46 @@
+language: php
+
+sudo: required
+dist: trusty
+
+php:
+  - 5.4
+  - 5.5
+  - 5.6
+  - 7.0
+  - hhvm-3.12
+  - hhvm-3.15
+  
+env:
+  global:
+    - KEY_SERVER="hkp://keyserver.ubuntu.com:80"
+    - MONGO_REPO_URI="http://repo.mongodb.com/apt/ubuntu"
+    - MONGO_REPO_TYPE="precise/mongodb-enterprise/"
+    - SOURCES_LOC="/etc/apt/sources.list.d/mongodb.list"
+  matrix:
+    - DRIVER_VERSION=1.2.0 SERVER_VERSION=2.6
+    - DRIVER_VERSION=1.2.0 SERVER_VERSION=3.0
+    - DRIVER_VERSION=1.2.0 SERVER_VERSION=3.2
+
+matrix:
+  fast_finish: true
+  include:
+#    - php: 7.0
+#      env: DRIVER_VERSION=1.2.0 SERVER_VERSION=2.4
+    - php: 7.0
+      env: DRIVER_VERSION=devel SERVER_VERSION=3.2
+  exclude:
+    - php: 5.4
+      env: DRIVER_VERSION=stable SERVER_VERSION=2.6
+    - php: 5.4
+      env: DRIVER_VERSION=stable SERVER_VERSION=3.0
+    - php: 5.5
+      env: DRIVER_VERSION=stable SERVER_VERSION=2.6
+    - php: 5.5
+      env: DRIVER_VERSION=stable SERVER_VERSION=3.0
+
+before_install:
+  - ./.travis.sh
+
+script:
+  - phpunit tests
