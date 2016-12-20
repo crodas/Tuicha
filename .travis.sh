@@ -18,31 +18,7 @@ mongod --version
 
 if [[ $TRAVIS_PHP_VERSION =~ ^hhvm ]]
 then
-
-    sudo apt-get install gcc-4.8 g++-4.8 libboost1.55-all-dev hhvm-dev hhvm-dbg -qqy 
-    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 60 \
-                         --slave /usr/bin/g++ g++ /usr/bin/g++-4.8
-    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.6 40 \
-                         --slave /usr/bin/g++ g++ /usr/bin/g++-4.6
-    sudo update-alternatives --set gcc /usr/bin/gcc-4.8
-    
-    wget http://launchpadlibrarian.net/80433359/libgoogle-glog0_0.3.1-1ubuntu1_amd64.deb
-    sudo dpkg -i libgoogle-glog0_0.3.1-1ubuntu1_amd64.deb
-    rm libgoogle-glog0_0.3.1-1ubuntu1_amd64.deb
-    wget http://launchpadlibrarian.net/80433361/libgoogle-glog-dev_0.3.1-1ubuntu1_amd64.deb
-    sudo dpkg -i libgoogle-glog-dev_0.3.1-1ubuntu1_amd64.deb
-    rm libgoogle-glog-dev_0.3.1-1ubuntu1_amd64.deb
-
-    # Install libjemalloc
-    wget http://ubuntu.mirrors.tds.net/ubuntu/pool/universe/j/jemalloc/libjemalloc1_3.6.0-2_amd64.deb
-    sudo dpkg -i libjemalloc1_3.6.0-2_amd64.deb
-    rm libjemalloc1_3.6.0-2_amd64.deb
-
-    wget http://ubuntu.mirrors.tds.net/ubuntu/pool/universe/j/jemalloc/libjemalloc-dev_3.6.0-2_amd64.deb
-    sudo dpkg -i libjemalloc-dev_3.6.0-2_amd64.deb
-    rm libjemalloc-dev_3.6.0-2_amd64.deb
-    
-    
+    sudo apt-get install hhvm-dev hhvm-dbg
     FILE=hhvm-mongodb-${DRIVER_VERSION}.tgz
     wget https://github.com/mongodb/mongo-hhvm-driver/releases/download/1.2.0/${FILE}
     tar xfz $FILE
