@@ -28,7 +28,7 @@ then
     hphpize
     cmake .
     make configlib
-    make 
+    make -j 4
     sudo cp mongodb.so /etc/hhvm
     echo 'hhvm.dynamic_extensions[mongodb]=/etc/hhvm/mongodb.so' | sudo tee --append /etc/hhvm/php.ini > /dev/null
     cd ..
