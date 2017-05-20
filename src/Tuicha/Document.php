@@ -35,6 +35,19 @@ Trait Document
         return $query->first();
     }
 
+    final static function find_or_create(Array $query)
+    {
+        $doc = self::find_one($query);
+        if ($doc) {
+            return $doc;
+        }
+        $doc = new static;
+        foreach ($query as $key => $val) {
+            $doc->$key = $val;
+        }
+        return $doc->save();
+    }
+
     final static function count($query = [])
     {
         $q = new Query(__CLASS__, $query, []);
