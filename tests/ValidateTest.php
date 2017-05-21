@@ -2,7 +2,7 @@
 
 use Docs\Doc1;
 
-class ValidateTest extends PHPUnit_Framework_TestCase
+class ValidateTest extends PHPUnit\Framework\TestCase
 {
     /** @expectedException UnexpectedValueException */
     public function testRequiredAnnotation() {

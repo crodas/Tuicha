@@ -22,7 +22,7 @@ class demo1 {
 
 define('demo1_class', 'demo1');
 
-class MetadataTest extends PHPUnit_Framework_TestCase
+class MetadataTest extends PHPUnit\Framework\TestCase
 {
     public function testLoading()
     {

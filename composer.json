@@ -19,5 +19,8 @@
         "crodas/notoj": "^1.4",
         "crodas/class-info": "^0.2.3",
         "doctrine/inflector": "^1.1"
+    },
+    "require-dev": {
+        "crodas/phpunit-compat": "^1.7"
     }
 }

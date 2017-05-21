@@ -6,7 +6,7 @@ use MongoDB\BSON\ObjectID;
 
 class foobar {}
 
-class TestSave extends PHPUnit_Framework_TestCase
+class TestSave extends PHPUnit\Framework\TestCase
 {
     public function testGenerateId()
     {

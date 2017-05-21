@@ -2,7 +2,7 @@
 
 use Tuicha\Util;
 
-class UtilTest extends PHPUnit_Framework_TestCase
+class UtilTest extends PHPUnit\Framework\TestCase
 {
     function testIsArray()
     {
