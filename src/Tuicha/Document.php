@@ -48,6 +48,14 @@ Trait Document
         return $doc->save();
     }
 
+    public static function createIndex()
+    {
+        return Tuicha::command([
+            'createIndexes' => Metadata::of(__CLASS__)->getCollectionName(),
+            'indexes' => Metadata::of(__CLASS__)->getIndexes(),
+        ]);
+    }
+
     final static function count($query = [])
     {
         $q = new Query(__CLASS__, $query, []);

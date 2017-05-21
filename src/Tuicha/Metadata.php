@@ -105,6 +105,23 @@ class Metadata
         return $arguments;
     }
 
+    public function getIndexes()
+    {
+        return $this->indexes;
+    }
+
+
+    protected function defineIndex(Array $index)
+    {
+        $name = [!empty($index['unique']) ? 'unique' : 'index'];
+        foreach ($index['key'] as $field => $asc) {
+            $name[] = $field . '_' . ($asc ? 'asc' : 'desc');
+        }
+
+        $index['name'] = implode('_', $name);
+        $this->indexes[]= $index;
+    }
+
     protected function processProperty(ReflectionProperty $property)
     {
         $annotations = $property->getAnnotations();
@@ -133,10 +150,20 @@ class Metadata
 
         $index = $annotations->getOne('index,unique');
         if ($index) {
-            $this->indexes[] = [
-                'field' => $propData['mongoProp'],
+            $args = $index->getArgs();
+            if (empty($args['asc']) && empty($args['desc'])) {
+                $order = 1;
+            } else if (!empty($args['asc'])) {
+                $order = !empty($args['asc']) ? 1 : -1;
+            } else {
+                $order = empty($args['desc']) ? 1 : -1;
+            }
+            $this->defineIndex([
+                'key' => [$propData['mongoProp'] => $order],
                 'unique' => $index->getName() === 'unique',
-            ];
+                'sparse' => !empty($args['sparse']),
+                'background' => true,
+            ]);
         }
 
         foreach ($annotations as $annotation) {

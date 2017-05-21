@@ -3,9 +3,9 @@
 class User {
     use Tuicha\Document;
 
-    /** @Required */
+    /** @Required @Index(sparse=true) */
     public $name;
 
-    /** @Validate(is_email) */
+    /** @Validate (is_email) @Unique */
     public $email;
 }

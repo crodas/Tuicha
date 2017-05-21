@@ -4,6 +4,11 @@ use Docs\Doc1;
 
 class FindTest extends PHPUnit_Framework_TestCase
 {
+    public function testCreateIndex()
+    {
+        $this->assertTrue(User::createIndex() instanceof MongoDB\Driver\Cursor);
+    }
+
     public function testCountZero()
     {
         $this->assertEquals(0, Doc1::count());

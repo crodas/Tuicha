@@ -77,4 +77,25 @@ class MetadataTest extends PHPUnit_Framework_TestCase
     {
         $this->assertEquals('users', Metadata::of('User')->getCollectionName());
     }
+
+    public function testGetIndexes()
+    {
+        $indexes = Metadata::of('User')->getIndexes();
+        $this->assertEquals([
+            [
+                'key' => ['name' => 1],
+                'unique' => false,
+                'sparse' => true,
+                'background' => true,
+                'name' => 'index_name_asc',
+            ],
+            [
+                'key' => ['email' => 1],
+                'unique' => true,
+                'sparse' => false,
+                'background' => true,
+                'name' => 'unique_email_asc',
+            ]
+        ], $indexes);
+    }
 }
