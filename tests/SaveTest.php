@@ -13,6 +13,7 @@ class TestSave extends PHPUnit\Framework\TestCase
         $x = new Doc1;
         $x->save();
         $this->assertTrue($x->id instanceof ObjectId);
+        $this->assertTrue($x->updated_at instanceof \Datetime);
         $this->assertTrue($x->created_at instanceof \Datetime);
     }
 

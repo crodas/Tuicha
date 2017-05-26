@@ -23,6 +23,7 @@ class Metadata
         'before_create' => ['before_create', 'beforeCreate'],
         'before_update' => ['before_update', 'beforeUpdate'],
         'before_save' => ['before_save', 'beforeSave'],
+        'after_save' => ['after_save', 'afterSave'],
     ];
 
     protected $className;
@@ -214,7 +215,11 @@ class Metadata
             return $this;
         }
         foreach ($this->events as $event) {
-            $object->{$event['method']}();
+            if ($event['is_public']) {
+                $object->{$event['method']}($event['args']);
+            } else {
+                throw new RuntimeException("Only public methods are supported for now");
+            }
         }
         return $this;
     }
