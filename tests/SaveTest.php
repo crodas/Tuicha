@@ -19,8 +19,8 @@ class TestSave extends PHPUnit\Framework\TestCase
 
         $y = Doc3::find_one(['_id' => $x->id]);
         $this->assertEquals(
-            $y->created_at->toDatetime()->format('Y-m-d H:i:s v P'),
-            $x->created_at->format('Y-m-d H:i:s v P')
+            $y->created_at->toDatetime()->format('Y-m-d H:i:s P'),
+            $x->created_at->format('Y-m-d H:i:s P')
         );
 
         sleep(1);
