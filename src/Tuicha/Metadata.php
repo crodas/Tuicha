@@ -35,7 +35,6 @@ class Metadata
     protected $mProps  = [];
     protected $indexes = [];
     protected $events = [];
-    
     protected $__connection;
     protected static $instances = [];
 
@@ -118,7 +117,6 @@ class Metadata
     {
         return $this->indexes;
     }
-
 
     protected function defineIndex(Array $index)
     {
@@ -374,7 +372,7 @@ class Metadata
         $document = $this->__connection;
         $prevDocument = $this->getLastState($object);
 
-            $this->triggerEvent($object, 'before_save');
+        $this->triggerEvent($object, 'before_save');
         if (!$prevDocument) {
             $this->triggerEvent($object, 'before_create');
             $document['command']  = 'create';

@@ -2,6 +2,7 @@
 
 use Tuicha\Metadata;
 use Docs\Doc1;
+use Docs\Doc3;
 use MongoDB\BSON\ObjectID;
 
 class foobar {}
@@ -10,7 +11,7 @@ class TestSave extends PHPUnit\Framework\TestCase
 {
     public function testGenerateId()
     {
-        $x = new Doc1;
+        $x = new Doc3;
         $x->save();
         $this->assertTrue($x->id instanceof ObjectId);
         $this->assertTrue($x->updated_at instanceof \Datetime);
@@ -41,10 +42,11 @@ class TestSave extends PHPUnit\Framework\TestCase
 
         $update = Metadata::of($x)->getSaveCommand($x);
         $this->assertEquals('update', $update['command']);
+        unset($update['document']['$set']);
         $this->assertEquals(['$push' => [
-                'x' => [
-                    '$each' => [6],
-                ],
+            'x' => [
+                '$each' => [6],
+            ],
         ]], $update['document']);
 
         $x->x = [1, 2, 6, 7, 4];
