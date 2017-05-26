@@ -6,13 +6,15 @@ use Tuicha;
 use Remember\Remember;
 use RuntimeException;
 use InvalidArgumentException;
+use Datetime;
 use UnexpectedValueException;
+use MongoDB\BSON\UTCDateTime;
 use Doctrine\Common\Inflector\Inflector;
 use Notoj\ReflectionClass;
 use Notoj\ReflectionProperty;
 use Notoj\ReflectionMethod;
 use MongoDB\BSON\ObjectID;
-use MongoDB\BSON\Type;
+use MongoDB\BSON\Type ;
 
 /**
  *  Metadata
@@ -76,6 +78,11 @@ class Metadata
         }
 
         if ($value instanceof Type || is_scalar($value)) {
+            return true;
+        }
+
+        if ($value instanceof Datetime) {
+            $value = new UTCDateTime($value);
             return true;
         }
 
