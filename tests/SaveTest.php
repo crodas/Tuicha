@@ -2,17 +2,33 @@
 
 use Tuicha\Metadata;
 use Docs\Doc1;
+use Docs\Doc3;
 use MongoDB\BSON\ObjectID;
 
 class foobar {}
 
 class TestSave extends PHPUnit\Framework\TestCase
 {
-    public function testGenerateId()
+    public function testGenerateIdAndCreatedUpdated()
     {
-        $x = new Doc1;
+        $x = new Doc3;
         $x->save();
         $this->assertTrue($x->id instanceof ObjectId);
+        $this->assertTrue($x->updated_at instanceof \Datetime);
+        $this->assertTrue($x->created_at instanceof \Datetime);
+
+        $y = Doc3::find_one(['_id' => $x->id]);
+        $this->assertEquals(
+            $y->created_at->toDatetime()->format('Y-m-d H:i:s v P'),
+            $x->created_at->format('Y-m-d H:i:s v P')
+        );
+
+        sleep(1);
+        $x->save();
+        $this->assertNotEquals(
+            $y->updated_at->toDatetime()->format('Y-m-d H:i:s v P'),
+            $x->updated_at->format('Y-m-d H:i:s v P')
+        );
     }
 
     public function testSaveClassWithoutDeclaration()
@@ -39,10 +55,11 @@ class TestSave extends PHPUnit\Framework\TestCase
 
         $update = Metadata::of($x)->getSaveCommand($x);
         $this->assertEquals('update', $update['command']);
+        unset($update['document']['$set']);
         $this->assertEquals(['$push' => [
-                'x' => [
-                    '$each' => [6],
-                ],
+            'x' => [
+                '$each' => [6],
+            ],
         ]], $update['document']);
 
         $x->x = [1, 2, 6, 7, 4];

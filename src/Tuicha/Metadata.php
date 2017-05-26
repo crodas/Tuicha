@@ -6,18 +6,28 @@ use Tuicha;
 use Remember\Remember;
 use RuntimeException;
 use InvalidArgumentException;
+use Datetime;
 use UnexpectedValueException;
+use MongoDB\BSON\UTCDateTime;
 use Doctrine\Common\Inflector\Inflector;
 use Notoj\ReflectionClass;
 use Notoj\ReflectionProperty;
+use Notoj\ReflectionMethod;
 use MongoDB\BSON\ObjectID;
-use MongoDB\BSON\Type;
+use MongoDB\BSON\Type ;
 
 /**
  *  Metadata
  */
 class Metadata
 {
+    protected static $all_events = [
+        'before_create' => ['before_create', 'beforeCreate'],
+        'before_update' => ['before_update', 'beforeUpdate'],
+        'before_save' => ['before_save', 'beforeSave'],
+        'after_save' => ['after_save', 'afterSave'],
+    ];
+
     protected $className;
     protected $collectionName;
     protected $idProperty = null;
@@ -26,7 +36,7 @@ class Metadata
     protected $pProps  = [];
     protected $mProps  = [];
     protected $indexes = [];
-    
+    protected $events = [];
     protected $__connection;
     protected static $instances = [];
 
@@ -71,6 +81,11 @@ class Metadata
             return true;
         }
 
+        if ($value instanceof Datetime) {
+            $value = new UTCDateTime($value);
+            return true;
+        }
+
         if (is_object($value)) {
             $class = strtolower(get_class($value));
             $value = Metadata::of($value)->toDocument($value, $validate);
@@ -109,7 +124,6 @@ class Metadata
     {
         return $this->indexes;
     }
-
 
     protected function defineIndex(Array $index)
     {
@@ -174,6 +188,47 @@ class Metadata
         $this->mProps[$mongoName] = $propData;
     }
 
+    protected function processMethod(ReflectionMethod $method)
+    {
+        static $annMap = [];
+        static $annotations = '';
+        if (empty($annotations)) {
+            foreach (self::$all_events as $event => $_annotations) {
+                foreach ((array)$_annotations as $annotation) {
+                    $annMap[strtolower($annotation)] = $event;
+                }
+            }
+            $annotations = implode(",", array_keys($annMap));
+        }
+        if (!$method->getAnnotations()->has($annotations)) {
+            return;
+        }
+
+        foreach ($method->getAnnotations()->get($annotations) as $annotation) {
+            $event = $annMap[$annotation->getName()];
+            $this->events[$event] = [
+                'method' => $method->getName(),
+                'is_public' => $method->isPublic(),
+                'args' => $annotation->getArgs(),
+            ];
+        }
+    }
+
+    public function triggerEvent($object, $eventName)
+    {
+        if (empty($this->events[$eventName])) {
+            return $this;
+        }
+        foreach ($this->events as $event) {
+            if ($event['is_public']) {
+                $object->{$event['method']}($event['args']);
+            } else {
+                throw new RuntimeException("Only public methods are supported for now");
+            }
+        }
+        return $this;
+    }
+
     protected function populateType($type, $value)
     {
         if (!empty($type['class'])) {
@@ -219,6 +274,78 @@ class Metadata
     }
 
 
+    protected function loadMetadata()
+    {
+        if (!class_exists($this->className)) {
+            throw new RuntimeException("Cannot find the class {$this->className}");
+        }
+
+        $reflection = new ReflectionClass($this->className);
+        $this->file = $reflection->getFileName();
+        $this->hasTrait = in_array(__NAMESPACE__ . '\Document', $reflection->getTraitNames());
+
+        if ($reflection->getAnnotations()->has('persist,table,collection')) {
+            $collection = $reflection->getAnnotations()->getOne('persist,table,collection')->getArg(0);
+        } else {
+            $class = explode("\\", $this->className);
+            $collection = strtolower(Inflector::pluralize(end($class)));
+        }
+
+        $this->collectionName = $collection;
+
+        foreach ($reflection->getProperties() as $property) {
+            $this->processProperty($property);
+        }
+
+        foreach ($reflection->getMethods() as $method) {
+            $this->processMethod($method);
+        }
+
+        if (!$this->idProperty) {
+            $definition = [
+                'annotations' => [],
+                'validations' => [],
+                'required' => false,
+                'is_public' => true,
+                'is_private' => false,
+                'type' => 'id',
+                'mongoProp' => '_id',
+                'phpProp' => 'id',
+            ];
+
+            $this->pProps['id'] = $definition;
+            $this->mProps['_id'] = $definition;
+            $this->idProperty  = 'id';
+        }
+    }
+
+    public function getFile()
+    {
+        return $this->file;
+    }
+
+    public static function of($className)
+    {
+        static $loader;
+        if (is_object($className)) {
+            $className = get_class($className);
+        }
+
+        if (empty($loader)) {
+            $loader = Remember::wrap('tuicha', function(&$args) {
+                $metadata = new self($args[0]);
+                $args[] = $metadata->getFile();
+                return $metadata;
+            });
+        }
+
+        if (empty(self::$instances[$className])) {
+            self::$instances[$className] = $loader($className);
+        }
+
+        return self::$instances[$className];
+    }
+
     public function snapshot($object, $data = null)
     {
         $data = $data ?: $this->toDocument($object);
@@ -232,7 +359,6 @@ class Metadata
             $object->__setState($data);
         }
     }
-
     protected function getLastState($object)
     {
         if ($this->hasTrait) {
@@ -253,10 +379,13 @@ class Metadata
         $document = $this->__connection;
         $prevDocument = $this->getLastState($object);
 
+        $this->triggerEvent($object, 'before_save');
         if (!$prevDocument) {
+            $this->triggerEvent($object, 'before_create');
             $document['command']  = 'create';
             $document['document'] = $this->toDocument($object, true, true);
         } else {
+            $this->triggerEvent($object, 'before_update');
             $document['command'] = 'update';
             $diff = [];
             $new  = $this->toDocument($object);
@@ -345,72 +474,5 @@ class Metadata
         return $array;
     }
 
-    protected function loadMetadata()
-    {
-        if (!class_exists($this->className)) {
-            throw new RuntimeException("Cannot find the class {$this->className}");
-        }
-
-        $reflection = new ReflectionClass($this->className);
-        $this->file = $reflection->getFileName();
-        $this->hasTrait = in_array(__NAMESPACE__ . '\Document', $reflection->getTraitNames());
-
-        if ($reflection->getAnnotations()->has('persist,table,collection')) {
-            $collection = $reflection->getAnnotations()->getOne('persist,table,collection')->getArg(0);
-        } else {
-            $class = explode("\\", $this->className);
-            $collection = strtolower(Inflector::pluralize(end($class)));
-        }
-
-        $this->collectionName = $collection;
-
-        foreach ($reflection->getProperties() as $property) {
-            $this->processProperty($property);
-        }
-
-        if (!$this->idProperty) {
-            $definition = [
-                'annotations' => [],
-                'validations' => [],
-                'required' => false,
-                'is_public' => true,
-                'is_private' => false,
-                'type' => 'id',
-                'mongoProp' => '_id',
-                'phpProp' => 'id',
-            ];
-
-            $this->pProps['id'] = $definition;
-            $this->mProps['_id'] = $definition;
-            $this->idProperty  = 'id';
-        }
-    }
-
-    public function getFile()
-    {
-        return $this->file;
-    }
-
-    public static function of($className)
-    {
-        static $loader;
-        if (is_object($className)) {
-            $className = get_class($className);
-        }
-
-        if (empty($loader)) {
-            $loader = Remember::wrap('tuicha', function(&$args) {
-                $metadata = new self($args[0]);
-                $args[] = $metadata->getFile();
-                return $metadata;
-            });
-        }
-
-        if (empty(self::$instances[$className])) {
-            self::$instances[$className] = $loader($className);
-        }
-
-        return self::$instances[$className];
-    }
 }
 

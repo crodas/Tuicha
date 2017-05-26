@@ -62,7 +62,8 @@ class Tuicha
 
     public static function save($object, $wait = true)
     {
-        $command = Metadata::of($object)->getSaveCommand($object, true);
+        $metadata = Metadata::of($object);
+        $command = $metadata->getSaveCommand($object, true);
         if ($wait === true) {
             $wait = new WriteConcern(WriteConcern::MAJORITY);
         }
@@ -105,7 +106,8 @@ class Tuicha
         }
 
 
-        Metadata::of($object)->snapshot($object);
+        $metadata->triggerEvent($object, 'after_save')
+            ->snapshot($object);
     }
 
     public static function loadDocuments($path)
