@@ -9,12 +9,30 @@ use Tuicha\Metadata;
 use Remember\Remember;
 use crodas\ClassInfo\ClassInfo;
 
+/**
+ * Tuicha class
+ *
+ * This is the main class of the project. It exposes public API for creating and managing database connections,
+ * and perform databases operations.
+ */
 class Tuicha
 {
     protected static $connections = [];
     protected static $autoload = [];
     protected static $autoload_loaded = false;
 
+    /**
+     * Adds a new connection,
+     *
+     * Adds a new connection to the connection pool. Each connection provides the database name, address
+     * and a name.
+     *
+     * Old connections maybe be replace at any time, the third parameter is the connection name.
+     *
+     * @param string $dbName
+     * @param string $connection
+     * @param string $name
+     */
     public static function addConnection($dbName, $connection = 'mongodb://localhost:27017', $name = 'default')
     {
         if (!($connection instanceof Manager)) {
@@ -22,7 +40,13 @@ class Tuicha
         }
         self::$connections[$name] = compact('dbName', 'connection');
     }
-    
+
+    /**
+     * Returns the an array with the connection, or an exception if the connection is not defined. The returned
+     * array has two elements, the database namae and teh MongoDB connection manager object.
+     *
+     * @return Array
+     */
     public static function getConnection($connectionName = 'default')
     {
         if (empty(self::$connections[$connectionName])) {
@@ -37,11 +61,18 @@ class Tuicha
         $connection = Metadata::of($name)->getConnection();
     }
 
-    public static function dropDatabase($connection = 'default')
+    /**
+     * Deletes a database.
+     *
+     * @param string $connectionName
+     *
+     * @return bool
+     */
+    public static function dropDatabase($connectionName = 'default')
     {
         $response = Tuicha::command([
             'dropDatabase' => 1
-        ], $connection)->toArray()[0];
+        ], $connectionName)->toArray()[0];
         return (bool)$response->ok;
     }
 
