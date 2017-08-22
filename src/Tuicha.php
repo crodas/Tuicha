@@ -76,6 +76,14 @@ class Tuicha
         return (bool)$response->ok;
     }
 
+    /**
+     * Executes a command in the database
+     *
+     * @param $command
+     * @param string $connection
+     *
+     * @return MongoDB\Driver\Cursor
+     */
     public static function command($command, $connection = null)
     {
         if (!($command instanceof Command)) {
@@ -141,10 +149,20 @@ class Tuicha
             ->snapshot($object);
     }
 
-    public static function loadDocuments($path)
+    /**
+     * Loads classes in a directory
+     *
+     * Loads all the classes and their metadata in a given directory. For efficiency the metadata
+     * is cached. As a bonus, it will also register an autoloader, which is cached.
+     *
+     * @param string $directory
+     *
+     * @return void
+     */
+    public static function addDirectory($directory)
     {
-        if (!is_dir($path)) {
-            throw new RuntimeException("{$path} is not a valid directory");
+        if (!is_dir($directory)) {
+            throw new RuntimeException("{$directory} is not a valid directory");
         }
         $loader = Remember::wrap('tuicha-autoload', function($args, $files) {
             $files = array_filter($files, 'is_file');
@@ -160,7 +178,7 @@ class Tuicha
             return array_filter($classes);
         });
 
-        self::$autoload = array_merge($loader($path), self::$autoload);
+        self::$autoload = array_merge($loader($directory), self::$autoload);
 
         if (!self::$autoload_loaded) {
             $classes = & self::$autoload;
