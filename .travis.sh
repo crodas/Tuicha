@@ -38,6 +38,10 @@ else
     php --ri mongodb
 fi
 
+wget https://phar.phpunit.de/phpunit-5.7.phar
+mv phpunit-5.7.phar `which phpunit`
+chmod +x `which phpunit`
+
 composer install --dev --no-interaction --prefer-source
 ulimit -c
 ulimit -c unlimited -S
