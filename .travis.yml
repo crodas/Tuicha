@@ -44,4 +44,4 @@ before_install:
   - ./.travis.sh
 
 script:
-  - phpunit tests
+  - /tmp/phpunit tests
