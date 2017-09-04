@@ -14,10 +14,19 @@ use Notoj\ReflectionClass;
 use Notoj\ReflectionProperty;
 use Notoj\ReflectionMethod;
 use MongoDB\BSON\ObjectID;
-use MongoDB\BSON\Type ;
+use MongoDB\BSON\Type;
 
 /**
- *  Metadata
+ * Metadata
+ *
+ * This metadata object is a reflection class which exposes details about how Tuicha should
+ * treat the documents and the collection.
+ *
+ * Its constructor is private, so it should be used through its public interface, `Metadata::of(<className>)`.
+ *
+ * Because it extracts information using the reflection API and parsing annotations the metadata
+ * are cached to disk for efficiency. Although any modification to the original file will invalidate
+ * their cache automatically.
  */
 class Metadata
 {
@@ -71,6 +80,21 @@ class Metadata
         return $collection;
     }
 
+    /**
+     * Serializes a PHP value for storing in MongoDB
+     *
+     *   1. Scalar values and MongoDB\BSON\Type objects are stored as is.
+     *   2. Any property that begins with __ is ignored (not persisted).
+     *   3. Any resource is ignored.
+     *   4. PHP's Datetime objects are converted to MongoDB\BSON\UTCDateTime
+     *   5. Any object is serialized with their own Metadata object (Metadata::serializeValue)
+     *
+     * @param string $propertyName  Property name
+     * @param mixed  &$value        Value to serialize. It is by reference, it is OK to edit it in place.
+     * @param boolean $validate     Whether or not to validate
+     *
+     * @return boolean TRUE if the property was serialized, FALSE if it should be ignored.
+     */
     protected function serializeValue($propertyName, &$value, $validate = true)
     {
         if (substr($propertyName, 0, 2) === '__' || is_resource($value)) {
@@ -92,7 +116,7 @@ class Metadata
             $definition = empty($this->pProps[$propertyName]) ? NULL : $this->pProps[$propertyName];
             if (!$definition || empty($definition['type']['class']) || strtolower($definition['type']['class']) !== $class) {
                 $value['__$type'] = compact('class');
-            } 
+            }
         }
 
         return true;
@@ -252,9 +276,9 @@ class Metadata
             }
 
             if (!empty($prop['type'])) {
-                $value = $this->populateType($prop['type'], $value); 
+                $value = $this->populateType($prop['type'], $value);
             } else if (is_object($value) && !empty($value->{'__$type'})) {
-                $value = $this->populateType((array)$value->{'__$type'}, (array)$value); 
+                $value = $this->populateType((array)$value->{'__$type'}, (array)$value);
             }
 
             if (!$prop || $prop['is_public']) {
@@ -443,7 +467,7 @@ class Metadata
                         if (!$response) {
                             throw new UnexpectedValueException("Invalid value for $key ($value)");
                         }
-                    } 
+                    }
                 }
             }
 
