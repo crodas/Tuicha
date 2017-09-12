@@ -77,7 +77,11 @@ class Tuicha
     }
 
     /**
-     * Executes a command in the database
+     * Executes a command in the database.
+     *
+     * The database command can be a Command object or an array. The $connection argument chooses
+     * in which connection to execute the given command, it will choose the 'default' conection if
+     * this argument is NULL.
      *
      * @param $command
      * @param string $connection
@@ -99,6 +103,22 @@ class Tuicha
         return $connection['connection']->executeCommand($connection['dbName'], $command);
     }
 
+    /**
+     * Saves an object into MongoDB.
+     *
+     * Saves an object into MongoDB. This function will save any object, even objects without 
+     * any metadata nor trait inheratance. In those cases the default data will be used.
+     *
+     * This save function will perform either an insert or an update if the object was created
+     * by the result from a query to the database.
+     *
+     * If $wait is true (default) this function will wait for a confirmation from the database
+     * that the data has been successfuly stored. Otherwise this function will send the command
+     * to MongoDB and forget about it, assuming it will not fail.
+     *
+     * @param object $object
+     * @param bool $wait
+     */
     public static function save($object, $wait = true)
     {
         $metadata = Metadata::of($object);
