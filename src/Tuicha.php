@@ -112,6 +112,12 @@ class Tuicha
      * This save function will perform either an insert or an update if the object was created
      * by the result from a query to the database.
      *
+     * If the operation is an update, only those properties with changes are saved back into the
+     * database instead of pushing the entire object back.
+     *
+     * When the save or update command an snapshot of the object is created privately. It is used
+     * for future save() calls, to persists only those properties which have changed.
+     *
      * If $wait is true (default) this function will wait for a confirmation from the database
      * that the data has been successfuly stored. Otherwise this function will send the command
      * to MongoDB and forget about it, assuming it will not fail.
