@@ -17,7 +17,7 @@ class TestSave extends PHPUnit\Framework\TestCase
         $this->assertTrue($x->updated_at instanceof \Datetime);
         $this->assertTrue($x->created_at instanceof \Datetime);
 
-        $y = Doc3::find_one(['_id' => $x->id]);
+        $y = Doc3::find(['_id' => $x->id])->first();
         $this->assertEquals(
             $y->created_at->toDatetime()->format('Y-m-d H:i:s P'),
             $x->created_at->format('Y-m-d H:i:s P')
@@ -38,7 +38,7 @@ class TestSave extends PHPUnit\Framework\TestCase
         $x->f->lol = true;
         $x->save();
 
-        $fromDb = Doc1::find_one(['_id' => $x->id]);
+        $fromDb = Doc1::find(['_id' => $x->id])->first();
         $this->assertEquals(get_class($x->f), get_class($fromDb->f));
         unset($fromDb->f->{'__$type'});
         unset($fromDb->f->__lastInstance);
@@ -67,7 +67,7 @@ class TestSave extends PHPUnit\Framework\TestCase
         $this->assertEquals('update', $update['command']);
 
         $x->save();
-        $this->assertEquals($x->x, Doc1::find_one(['_id' => $x->id])->x);
+        $this->assertEquals($x->x, Doc1::find(['_id' => $x->id])->first()->x);
     }
 
     public function testSaveNestedObject()
@@ -85,7 +85,7 @@ class TestSave extends PHPUnit\Framework\TestCase
         ]], $update['document']);
 
         $x->save();
-        $this->assertEquals($x->x, Doc1::find_one(['_id' => $x->id])->x);
+        $this->assertEquals($x->x, Doc1::find(['_id' => $x->id])->first()->x);
     }
     
 }

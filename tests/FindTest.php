@@ -31,7 +31,7 @@ class FindTest extends PHPUnit\Framework\TestCase
      */
     public function testFindOneNoArgument()
     {
-        $doc = Doc1::find_one();
+        $doc = Doc1::find()->first();
         $this->assertTrue($doc instanceof Doc1);
         $this->assertEquals('lol', $doc->bar);
     }
@@ -41,7 +41,7 @@ class FindTest extends PHPUnit\Framework\TestCase
      */
     public function testFindOneWithResult()
     {
-        $doc = Doc1::find_one(['bar' => 'lol']);
+        $doc = Doc1::find(['bar' => 'lol'])->first();
         $this->assertNotNull($doc);
         $this->assertTrue($doc instanceof Doc1);
         $this->assertEquals('lol', $doc->bar);
@@ -52,7 +52,7 @@ class FindTest extends PHPUnit\Framework\TestCase
      */
     public function testFindOneNoResult()
     {
-        $doc = Doc1::find_one(['foo' => 'xxx']);
+        $doc = Doc1::find(['foo' => 'xxx'])->first();
         $this->assertNull($doc);
     }
 
@@ -61,12 +61,12 @@ class FindTest extends PHPUnit\Framework\TestCase
      */
     public function testUpdate()
     {
-        $doc = Doc1::find_one(['bar' => 'lol']);
+        $doc = Doc1::find(['bar' => 'lol'])->first();
         $doc->bar = 'xxx';
         $doc->save();
 
-        $this->assertNull(Doc1::find_one(['bar' => 'lol']));
-        $this->assertNotNull(Doc1::find_one(['bar' => 'xxx']));
+        $this->assertNull(Doc1::find(['bar' => 'lol'])->first());
+        $this->assertNotNull(Doc1::find(['bar' => 'xxx'])->first());
     }
 
     public function testMany()
