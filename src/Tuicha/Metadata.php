@@ -84,12 +84,22 @@ class Metadata
     protected $__connection;
     protected static $instances = [];
 
+    /**
+     * Class constructor
+     *
+     * This method is private on porpuse, by doing so it is not possible to construct outside of this scope.
+     */
     final private function __construct($className)
     {
         $this->className = $className;
         $this->loadMetadata();
     }
 
+    /**
+     * Returns information about the connection to this collection
+     *
+     * @return array
+     */
     public function getConnection()
     {
         static $cache = [];
@@ -105,6 +115,15 @@ class Metadata
         return $cache[$this->className];
     }
 
+    /**
+     * Returns the collection name.
+     *
+     * If $dbName is true, the database name is prepend to the collection name.
+     *
+     * @param bool $dbName Whether to include the database name or not.
+     *
+     * @return string
+     */
     public function getCollectionName($dbName = false)
     {
         $collection = $this->collectionName;
@@ -331,7 +350,6 @@ class Metadata
 
         return $object;
     }
-
 
     protected function loadMetadata()
     {
