@@ -307,22 +307,40 @@ class Metadata
         return $this;
     }
 
-    protected function populateType($type, $value)
+    /**
+     * Creates a new instance of a given $type
+     *
+     * @param array $type
+     * @param array $document
+     *
+     * @return object
+     */
+    protected function newInstanceByType($type, $document)
     {
         if (!empty($type['class'])) {
-            return Metadata::of($type['class'])->newInstance($value);
+            return Metadata::of($type['class'])->newInstance($document);
         }
 
-        return $value;
+        return $document;
     }
 
-    public function newInstance(array $data)
+    /**
+     * Creates a new instance object.
+     *
+     * This function will take a document from the database (an array) and will
+     * return a PHP object. It uses the metadata if available.
+     *
+     * @param array $document
+     *
+     * @return object
+     */
+    public function newInstance(array $document)
     {
         $class  = $this->className;
         $object = new $this->className;
         $state  = [];
 
-        foreach ($data as $key => $value) {
+        foreach ($document as $key => $value) {
             $prop = null;
             if (!empty($this->pProps[$key]) ||  !empty($this->mProps[$key])) {
                 $prop = !empty($this->pProps[$key]) ? $this->pProps[$key] : $this->mProps[$key];
@@ -330,9 +348,9 @@ class Metadata
             }
 
             if (!empty($prop['type'])) {
-                $value = $this->populateType($prop['type'], $value);
+                $value = $this->newInstanceByType($prop['type'], $value);
             } else if (is_object($value) && !empty($value->{'__$type'})) {
-                $value = $this->populateType((array)$value->{'__$type'}, (array)$value);
+                $value = $this->newInstanceByType((array)$value->{'__$type'}, (array)$value);
             }
 
             if (!$prop || $prop['is_public']) {
@@ -346,7 +364,7 @@ class Metadata
             $state[$key] = $value;
         }
 
-        $this->snapshot($object, $data);
+        $this->snapshot($object, $document);
 
         return $object;
     }

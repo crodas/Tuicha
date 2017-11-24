@@ -4,6 +4,14 @@ use Docs\Doc1;
 
 class FindTest extends PHPUnit\Framework\TestCase
 {
+    public function testFindOrCreate()
+    {
+        $where = ['email' => uniqid() . '@name.com', 'name' => 'lol'];
+        $user1 = User::firstOrCreate($where);
+        $this->assertEquals($where['email'], $user1->email);
+        $this->assertEquals($user1->id, User::firstOrCreate($where)->id);
+    }
+
     public function testCreateIndex()
     {
         $this->assertTrue(User::createIndex() instanceof MongoDB\Driver\Cursor);

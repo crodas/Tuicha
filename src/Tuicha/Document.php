@@ -87,9 +87,9 @@ Trait Document
      *
      * @return object
      */
-    final static function find_or_create(Array $query)
+    final static function firstOrCreate(Array $query)
     {
-        $doc = self::find_one($query);
+        $doc = self::find($query)->first();
         if ($doc) {
             return $doc;
         }
@@ -97,7 +97,8 @@ Trait Document
         foreach ($query as $key => $val) {
             $doc->$key = $val;
         }
-        return $doc->save();
+        $doc->save();
+        return $doc;
     }
 
     /**
