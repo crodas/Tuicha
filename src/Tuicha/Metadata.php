@@ -40,6 +40,7 @@ namespace Tuicha;
 use Tuicha;
 use Remember\Remember;
 use RuntimeException;
+use Notoj\Annotation\Annotation;
 use InvalidArgumentException;
 use Datetime;
 use UnexpectedValueException;
@@ -181,18 +182,23 @@ class Metadata
         $arguments = [];
         foreach ($annotations as $annotation) {
             foreach ($annotation->getArgs() as $arg) {
-                $arguments = array_merge($arguments, (array)$arg);
+                $arguments[] = $arg;
             }
         }
 
-        $arguments = array_unique($arguments);
-
         foreach ($arguments as $id => $function) {
-            if (is_callable([__NAMESPACE__ . '\Validation', $function])) {
-                $arguments[$id] = [__NAMESPACE__ . '\Validation', $function];
-            } else if (strpos($function, "::") > 0) {
-                $arguments[$id] = explode("::", $function, 2);
+            $args = [];
+            if ($function instanceof Annotation) {
+                $args     = $function->getArgs();
+                $function = $function->getName();
             }
+
+            if (is_callable([__NAMESPACE__ . '\Validation', $function])) {
+                $function = [__NAMESPACE__ . '\Validation', $function];
+            } else if (is_string($function) && strpos($function, "::") > 0) {
+                $function = explode("::", $function, 2);
+            }
+            $arguments[$id] = [$function, $args];
         }
 
         return $arguments;
@@ -528,11 +534,11 @@ class Metadata
                     throw new UnexpectedValueException("Unexpected empty value for property $key");
                 } else if ($value && !empty($definition['validations'])) {
                     foreach ($definition['validations'] as $validation) {
-                        if (is_array($validation)) {
-                            list($class, $method) = $validation;
-                            $response = $class::$method($value);
-                        } else if (is_callable($validation)) {
-                            $response = $validation($value);
+                        if (is_array($validation[0])) {
+                            list($class, $method) = $validation[0];
+                            $response = $class::$method($value, $validation[1]);
+                        } else if (is_callable($validation[0])) {
+                            $response = $validation[0]($value, $validation[1]);
                         }
 
                         if (!$response) {

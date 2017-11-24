@@ -53,4 +53,9 @@ class Validation
         return true;
     }
 
+    public static function between($number, array $args)
+    {
+        return $number >= $args[0] && $number <= $args[1];
+    }
+
 }

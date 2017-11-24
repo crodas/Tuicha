@@ -35,7 +35,5 @@ class ValidateTest extends PHPUnit\Framework\TestCase
         $d->save();
 
         $this->assertEquals(19, User::find(['_id' => $d->id])->first()->age);
-        $this->assertEquals(19, $d->age);
-
     }
 }
