@@ -188,7 +188,7 @@ class Metadata
         $arguments = array_unique($arguments);
 
         foreach ($arguments as $id => $function) {
-            if (is_callable(__NAMESPACE__ . '\Validation', $function)) {
+            if (is_callable([__NAMESPACE__ . '\Validation', $function])) {
                 $arguments[$id] = [__NAMESPACE__ . '\Validation', $function];
             } else if (strpos($function, "::") > 0) {
                 $arguments[$id] = explode("::", $function, 2);
@@ -531,7 +531,7 @@ class Metadata
                         if (is_array($validation)) {
                             list($class, $method) = $validation;
                             $response = $class::$method($value);
-                        } else {
+                        } else if (is_callable($validation)) {
                             $response = $validation($value);
                         }
 

@@ -8,4 +8,10 @@ class User {
 
     /** @Validate (is_email) @Unique */
     public $email;
+
+    /**
+     * @Validate(is_integer)
+     * @Validate(between, 0, 99)
+     */
+    public $age;
 }
