@@ -192,6 +192,10 @@ class Tuicha
                 ];
             }
 
+            if (empty($queries)) {
+                return;
+            }
+
             $return = static::command([
                 'update' => $command['collection'],
                 'updates' => $queries,

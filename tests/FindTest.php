@@ -12,6 +12,19 @@ class FindTest extends PHPUnit\Framework\TestCase
         $this->assertEquals($user1->id, User::firstOrCreate($where)->id);
     }
 
+    public function testCollectionUpdate()
+    {
+        $where = ['email' => uniqid() . '@name.com', 'name' => 'lol'];
+        $user1 = User::firstOrCreate($where);
+        $this->assertEquals($where['email'], $user1->email);
+        $this->assertTrue(empty($user1->foo));
+
+        $ret = User::update($where, ['$set' => ['foo' => 'bar']], false, false, true);
+
+        $user2 = User::firstOrCreate($where);
+        $this->assertEquals('bar', $user2->foo);
+    }
+
     public function testCreateIndex()
     {
         $this->assertTrue(User::createIndex() instanceof MongoDB\Driver\Cursor);
