@@ -168,6 +168,11 @@ class Tuicha
             $wait = new WriteConcern(WriteConcern::MAJORITY);
         }
 
+        // There is nothing to create/update
+        if (empty($command['document'])) {
+            return;
+        }
+
         switch ($command['command']) {
         case 'create':
             $writer = new BulkWrite;
@@ -192,10 +197,6 @@ class Tuicha
                 ];
             }
 
-            if (empty($queries)) {
-                return;
-            }
-
             $return = static::command([
                 'update' => $command['collection'],
                 'updates' => $queries,
@@ -208,7 +209,6 @@ class Tuicha
         if (!empty($return->writeErrors)) {
             var_dump($return->writeErrors);
         }
-
 
         $metadata->triggerEvent($object, 'after_save')
             ->snapshot($object);
