@@ -27,7 +27,8 @@ class ValidateTest extends PHPUnit\Framework\TestCase
         $d->save();
     }
 
-    public function testIsIntegerValidationFlotToInt() {
+    public function testIsIntegerValidationFlotToInt()
+    {
         $d = new User;
         $d->name  = "xxx";
         $d->email = "lol@lol.com";
@@ -35,5 +36,17 @@ class ValidateTest extends PHPUnit\Framework\TestCase
         $d->save();
 
         $this->assertEquals(19, User::find(['_id' => $d->id])->first()->age);
+    }
+
+    /**
+     * @expectedException RuntimeException
+     */
+    public function testBetween()
+    {
+        $d = new User;
+        $d->name  = "xxx";
+        $d->email = "lol@lol.com";
+        $d->age   = 199;
+        $d->save();
     }
 }
