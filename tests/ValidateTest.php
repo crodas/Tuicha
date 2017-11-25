@@ -49,4 +49,17 @@ class ValidateTest extends PHPUnit\Framework\TestCase
         $d->age   = 199;
         $d->save();
     }
+
+    /**
+     * @dependsOn testIsIntegerValidationFlotToInt
+     * @expectedException MongoDB\Driver\Exception\BulkWriteException
+     */
+    public function testValidationUnique()
+    {
+        $d = new User;
+        $d->name  = "xxx";
+        $d->email = "lol@lol.com";
+        $d->age   = 19;
+        $d->save();
+    }
 }
