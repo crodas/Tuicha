@@ -166,6 +166,8 @@ class Tuicha
         $command = $metadata->getSaveCommand($object, true);
         if ($wait === true) {
             $wait = new WriteConcern(WriteConcern::MAJORITY);
+        } else {
+            $wait = null;
         }
 
         // There is nothing to create/update
@@ -183,7 +185,6 @@ class Tuicha
                 $writer,
                 $wait
             );
-
             break;
 
         case 'update':

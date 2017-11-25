@@ -63,7 +63,7 @@ class Util
         for ($i = 0; $i < $cLength; ++$i) {
             if ($new[$i] !== $old[$i]) {
                 $update[$i] = $new[$i];
-            } 
+            }
         }
 
         if ($newLength < $oldLength) {
