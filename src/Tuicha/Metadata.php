@@ -82,7 +82,6 @@ class Metadata
     protected $mProps  = [];
     protected $indexes = [];
     protected $events = [];
-    protected $__connection;
     protected static $instances = [];
 
     /**
@@ -101,16 +100,12 @@ class Metadata
      *
      * @return array
      */
-    public function getConnection()
+    public function getCollection()
     {
         static $cache = [];
         if (empty($cache[$this->className])) {
             $connection = Tuicha::getConnection('default');
-            $cache[$this->className] = [
-                'dbName' => $connection['dbName'],
-                'collection' => $connection['dbName'] . '.' . $this->getCollectionName(),
-                'connection' => $connection['connection'],
-            ];
+            $cache[$this->className] = new Collection($this->getCollectionName(), $connection);
         }
 
         return $cache[$this->className];
@@ -127,12 +122,10 @@ class Metadata
      */
     public function getCollectionName($dbName = false)
     {
-        $collection = $this->collectionName;
         if ($dbName) {
-            $connection = Tuicha::getConnection('default');
-            $collection = $connection['dbName'] . '.' . $collection;
+            return $this->getCollection()->getName();
         }
-        return $collection;
+        return $this->collectionName;
     }
 
     /**
@@ -471,13 +464,12 @@ class Metadata
 
     public function getSaveCommand($object)
     {
-        if (!$this->__connection) {
-            $this->__connection = Tuicha::getConnection('default');
-            $this->__connection['namespace'] = $this->getCollectionName(true);
-            $this->__connection['collection'] = $this->getCollectionName();
-        }
+        $document = [
+            'connection' => $this->getCollection()->getDatabase()->getConnection(),
+            'namespace'  => $this->getCollectionName(true),
+            'collection' => $this->getCollectionName(),
+        ];
 
-        $document = $this->__connection;
         $prevDocument = $this->getLastState($object);
 
         $this->triggerEvent($object, 'before_save');

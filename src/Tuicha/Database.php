@@ -37,70 +37,28 @@
 
 namespace Tuicha;
 
-use Tuicha;
-use IteratorIterator;
-use MongoDB\Driver;
-use MongoDB\Driver\Command;
+use MongoDB\Driver\Manager;
 
-class Query extends Cursor
+class Database
 {
-    protected $collection;
-    protected $query;
-    protected $fields;
-    protected $metadata;
-    protected $namespace;
-    protected $class;
-    protected $filters = [];
-
-    public function __construct($class, $query, $fields)
+    public function __construct($dbName, Manager $connection)
     {
-        $this->class      = $class;
-        $this->metadata   = Metadata::of($class);
-        $this->query      = $query;
-        $this->fields     = $fields;
-        $this->collection = $this->metadata->getCollection();
+        $this->dbName     = $dbName;
+        $this->connection = $connection;
     }
 
-    protected function doQuery()
+    public function getDbName()
     {
-        $query = new Driver\Query($this->query, [
-            'selector' => $this->fields,
-        ]);
-
-        $cursor = $this->collection->query($query);
-        $cursor->setTypeMap(['root' => 'array', 'document' => 'stdclass', 'array' => 'array']);
-        $this->setResultSet(new IteratorIterator($cursor));
+        return $this->dbName;
     }
 
-    public function first()
+    public function getConnection()
     {
-        $query = new Driver\Query($this->query, [
-            'selector' => $this->fields,
-            'limit' => 1,
-        ]);
-
-        $cursor = $this->collection->query($query);
-        $cursor->setTypeMap(['root' => 'array', 'document' => 'stdclass', 'array' => 'array']);
-
-        $result = $cursor->toArray();
-
-        if (empty($result)) {
-            return NULL;
-        }
-
-        return $this->metadata->newInstance($result[0]);
+        return $this->connection;
     }
 
-    public function filter(Callable $fnc)
+    public function execute($command)
     {
-        $this->filters[] = $fnc;
-    }
-
-    public function count()
-    {
-        return Tuicha::command([
-            'count' => $this->metadata->GetCollectionName(),
-            'query' => $this->query,
-        ], $this->collection)->toArray()[0]->n;
+        return $this->connection->executeCommand($this->dbName, $command);
     }
 }

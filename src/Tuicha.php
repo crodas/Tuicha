@@ -40,6 +40,8 @@ use MongoDB\Driver\Command;
 use MongoDB\Driver\BulkWrite;
 use MongoDB\BSON\ObjectID;
 use MongoDB\Driver\WriteConcern;
+use Tuicha\Database;
+use Tuicha\Collection;
 use Tuicha\Metadata;
 use Remember\Remember;
 use crodas\ClassInfo\ClassInfo;
@@ -73,7 +75,7 @@ class Tuicha
         if (!($connection instanceof Manager)) {
             $connection = new Manager($connection);
         }
-        self::$connections[$name] = compact('dbName', 'connection');
+        self::$connections[$name] = new Database($dbName, $connection);
     }
 
     /**
@@ -91,9 +93,9 @@ class Tuicha
         return self::$connections[$connectionName];
     }
 
-    public static function update($name, Array $selector, Array $update, $wait = true)
+    public static function update($collectionName, $connection = 'default')
     {
-        $connection = Metadata::of($name)->getConnection();
+        return new Operation\Update($collectionName, self::getConnect($connection));
     }
 
     /**
@@ -134,8 +136,11 @@ class Tuicha
         }
 
         $connection = $connection ?: self::getConnection();
+        if ($connection instanceof Collection) {
+            $connection = $connection->getDatabase();
+        }
 
-        return $connection['connection']->executeCommand($connection['dbName'], $command);
+        return $connection->execute($command);
     }
 
     /**

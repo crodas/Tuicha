@@ -37,70 +37,34 @@
 
 namespace Tuicha;
 
-use Tuicha;
-use IteratorIterator;
-use MongoDB\Driver;
-use MongoDB\Driver\Command;
-
-class Query extends Cursor
+class Collection
 {
-    protected $collection;
-    protected $query;
-    protected $fields;
-    protected $metadata;
-    protected $namespace;
-    protected $class;
-    protected $filters = [];
+    protected $database;
+    protected $collectionName;
 
-    public function __construct($class, $query, $fields)
+    public function __construct($collectionName, Database $database)
     {
-        $this->class      = $class;
-        $this->metadata   = Metadata::of($class);
-        $this->query      = $query;
-        $this->fields     = $fields;
-        $this->collection = $this->metadata->getCollection();
+        $this->collectionName = $database->getDbName() . '.' . $collectionName;
+        $this->database       = $database;
     }
 
-    protected function doQuery()
+    public function getDatabase()
     {
-        $query = new Driver\Query($this->query, [
-            'selector' => $this->fields,
-        ]);
-
-        $cursor = $this->collection->query($query);
-        $cursor->setTypeMap(['root' => 'array', 'document' => 'stdclass', 'array' => 'array']);
-        $this->setResultSet(new IteratorIterator($cursor));
+        return $this->database;
     }
 
-    public function first()
+    public function getName()
     {
-        $query = new Driver\Query($this->query, [
-            'selector' => $this->fields,
-            'limit' => 1,
-        ]);
-
-        $cursor = $this->collection->query($query);
-        $cursor->setTypeMap(['root' => 'array', 'document' => 'stdclass', 'array' => 'array']);
-
-        $result = $cursor->toArray();
-
-        if (empty($result)) {
-            return NULL;
-        }
-
-        return $this->metadata->newInstance($result[0]);
+        return $this->collectionName;
     }
 
-    public function filter(Callable $fnc)
+    public function query($query)
     {
-        $this->filters[] = $fnc;
+        return $this->database->getConnection()->executeQuery($this->collectionName, $query);
     }
 
-    public function count()
+    public function execute($query)
     {
-        return Tuicha::command([
-            'count' => $this->metadata->GetCollectionName(),
-            'query' => $this->query,
-        ], $this->collection)->toArray()[0]->n;
+        return $this->database->getConnection()->executeCommand($this->collectionName, $query);
     }
 }

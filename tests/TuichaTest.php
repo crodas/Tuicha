@@ -17,10 +17,7 @@ class TuichaTest extends PHPUnit\Framework\TestCase
         Tuicha::addConnection($db, 'mongodb://localhost:27017', $db);
 
         $conn = Tuicha::getConnection($db);
-        $this->assertTrue(is_array($conn));
-        $this->assertEquals(2, count($conn));
-        $this->assertFalse(empty($conn['dbName']));
-        $this->assertFalse(empty($conn['connection']));
+        $this->assertTrue($conn instanceof Tuicha\Database);
         $this->assertTrue(Tuicha::dropDatabase($db));
     }
 
