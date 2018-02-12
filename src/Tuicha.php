@@ -235,6 +235,7 @@ class Tuicha
         if (!is_dir($directory)) {
             throw new RuntimeException("{$directory} is not a valid directory");
         }
+
         $loader = Remember::wrap('tuicha-autoload', function($args, $files) {
             $files = array_filter($files, 'is_file');
             $parser = new ClassInfo;
@@ -252,14 +253,31 @@ class Tuicha
         self::$autoload = array_merge($loader($directory), self::$autoload);
 
         if (!self::$autoload_loaded) {
-            $classes = & self::$autoload;
-            spl_autoload_register(function($class) use (&$classes) {
-                $class = strtolower($class);
-                if (!empty($classes[$class])) {
-                    require $classes[$class];
-                }
-            });
+            spl_autoload_register(__CLASS__ . '::autoloader');
             self::$autoload_loaded = true;
         }
+    }
+
+    /**
+     * Autoloader
+     *
+     * Implements an autoloader which adds folders through `Tuicha::addDirectory`.
+     *
+     * The autoloader is rather simple, the data comes through `Tuicha::addDirectory` and
+     * it is cached for performance.
+     *
+     * @param string $class Class name to autoload
+     *
+     * @return bool
+     */
+    public static function autoloader($class)
+    {
+        $class = strtolower($class);
+        if (!empty(self::$autoload[$class])) {
+            require self::$autoload[$class];
+            return true;
+        }
+
+        return false;
     }
 }

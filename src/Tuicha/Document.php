@@ -48,7 +48,7 @@ use MongoDB\Driver\WriteConcern;
  * operations and classes method which are document operations.
  *
  */
-Trait Document
+trait Document
 {
     private $__lastInstance;
     private $__id;
