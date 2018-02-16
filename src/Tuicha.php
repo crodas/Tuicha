@@ -42,6 +42,7 @@ use MongoDB\BSON\ObjectID;
 use MongoDB\Driver\WriteConcern;
 use Tuicha\Database;
 use Tuicha\Collection;
+use Tuicha\Operation;
 use Tuicha\Metadata;
 use Remember\Remember;
 use crodas\ClassInfo\ClassInfo;
@@ -93,9 +94,22 @@ class Tuicha
         return self::$connections[$connectionName];
     }
 
+    /**
+     * Creates an update object
+     *
+     * Creates an update object for a collectionName through a connection.
+     *
+     * The update object with an fluent interface that allows to modify the update
+     * before sending it to the database.
+     *
+     * @param string $collectionName    The collection name
+     * @param string $connection        The connection name
+     *
+     * @return Tuicha\Operation\Update
+     */
     public static function update($collectionName, $connection = 'default')
     {
-        return new Operation\Update($collectionName, self::getConnect($connection));
+        return new Operation\Update($collectionName, self::getConnection($connection));
     }
 
     /**
