@@ -42,6 +42,7 @@ use Iterator;
 abstract class Cursor implements Iterator
 {
     protected $queried = false;
+    protected $current;
     protected $result;
 
     abstract protected function doQuery();
@@ -68,7 +69,13 @@ abstract class Cursor implements Iterator
     public function valid()
     {
         $this->ensureQuery();
-        return $this->result->valid();
+
+        if ($this->result->valid()) {
+            $this->current = $this->metadata->newInstance($this->result->current());
+            return true;
+        }
+
+        return false;
     }
 
     public function next()
@@ -79,15 +86,11 @@ abstract class Cursor implements Iterator
 
     public function current()
     {
-        $this->ensureQuery();
-        return $this->metadata->newInstance($this->result->current());
+        return $this->current;
     }
 
     public function key()
     {
-        if (!$this->queried) {
-            $this->doQuery();
-        }
         return $this->metadata->getId($this->current);
     }
 

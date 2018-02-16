@@ -1,6 +1,7 @@
 <?php
 
 use Docs\Doc1;
+use Docs\Doc4;
 
 class FindTest extends PHPUnit\Framework\TestCase
 {
@@ -95,11 +96,22 @@ class FindTest extends PHPUnit\Framework\TestCase
         $x = Doc1::find();
         $this->assertTrue($x instanceof Tuicha\Query);
         $total = 0;
-        foreach (Doc1::find() as $row) {
+        foreach (Doc1::find() as $key => $row) {
             $this->assertTrue($row instanceof Doc1);
             ++$total;
         }
         $this->assertNotEquals(0, $total);
+    }
+
+    public function testId()
+    {
+        $x = new Doc4;
+        $x->foo = 'bar';
+        $x->save();
+
+        foreach (Doc4::find() as $id => $obj) {
+           $this->assertEquals($id, $obj->getId());
+        }
     }
 
 
