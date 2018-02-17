@@ -34,75 +34,63 @@
   | Authors: César Rodas <crodas@php.net>                                           |
   +---------------------------------------------------------------------------------+
 */
+namespace Tuicha\Query;
 
-namespace Tuicha;
+use Iterator;
 
-use Tuicha;
-use ArrayAccess;
-use IteratorIterator;
-use MongoDB\Driver;
-use MongoDB\Driver\Command;
-
-class Query extends Cursor implements ArrayAccess
+abstract class Cursor implements Iterator
 {
-    use Fluent\Filter;
+    protected $queried = false;
+    protected $current;
+    protected $result;
 
-    protected $collection;
-    protected $fields;
-    protected $metadata;
-    protected $namespace;
-    protected $class;
-    protected $filters = [];
+    abstract protected function doQuery();
 
-    public function __construct($class, $filter, $fields)
+    protected function setResultSet(Iterator $iterable)
     {
-        $this->class      = $class;
-        $this->metadata   = Metadata::of($class);
-        $this->filter     = $filter;
-        $this->fields     = $fields;
-        $this->collection = $this->metadata->getCollection();
+        $this->result  = $iterable;
+        $this->queried = true;
     }
 
-    protected function doQuery()
+    protected function ensureQuery()
     {
-        $query = new Driver\Query($this->filter, [
-            'selector' => $this->fields,
-        ]);
-
-        $cursor = $this->collection->query($query);
-        $cursor->setTypeMap(['root' => 'array', 'document' => 'stdclass', 'array' => 'array']);
-        $this->setResultSet(new IteratorIterator($cursor));
+        if (!$this->queried) {
+            $this->doQuery();
+        }
     }
 
-    public function first()
+    public function rewind()
     {
-        $query = new Driver\Query($this->filter, [
-            'selector' => $this->fields,
-            'limit' => 1,
-        ]);
+        $this->ensureQuery();
+        $this->result->rewind();
+    }
 
-        $cursor = $this->collection->query($query);
-        $cursor->setTypeMap(['root' => 'array', 'document' => 'stdclass', 'array' => 'array']);
+    public function valid()
+    {
+        $this->ensureQuery();
 
-        $result = $cursor->toArray();
-
-        if (empty($result)) {
-            return NULL;
+        if ($this->result->valid()) {
+            $this->current = $this->metadata->newInstance($this->result->current());
+            return true;
         }
 
-        return $this->metadata->newInstance($result[0]);
+        return false;
     }
 
-    public function filter(Callable $fnc)
+    public function next()
     {
-        $this->filters[] = $fnc;
+        $this->ensureQuery();
+        $this->result->next();
     }
 
-    public function count()
+    public function current()
     {
-        return Tuicha::command([
-            'count' => $this->metadata->GetCollectionName(),
-            'query' => $this->filter,
-        ], $this->collection)->toArray()[0]->n;
+        return $this->current;
     }
+
+    public function key()
+    {
+        return $this->metadata->getId($this->current);
+    }
+
 }

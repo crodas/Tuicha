@@ -2,6 +2,7 @@
 
 use Docs\Doc1;
 use Docs\Doc4;
+use Docs\DocWithoutTrait;
 
 class FindTest extends PHPUnit\Framework\TestCase
 {
@@ -20,10 +21,37 @@ class FindTest extends PHPUnit\Framework\TestCase
         $this->assertEquals($where['email'], $user1->email);
         $this->assertTrue(empty($user1->foo));
 
-        $ret = User::update($where, ['$set' => ['foo' => 'bar']], false, false, true);
+        $ret = User::update($where, ['$set' => ['foo' => 'bar']])
+            ->execute(true);
 
         $user2 = User::firstOrCreate($where);
         $this->assertEquals('bar', $user2->foo);
+    }
+
+    public function testDocumentNoTrait()
+    {
+        $x = new DocWithoutTrait;
+        $x->foo = 'bar';
+        Tuicha::save($x);
+
+        Tuicha::update(DocWithoutTrait::class)
+            ->set(function($update) {
+                $update->foo = 'xxx';
+            })->execute(true);
+
+        $x = Tuicha::find(DocWithoutTrait::class)
+            ->foo->is('bar')
+            ->first();
+        $this->assertEquals(null, $x);
+        $x = Tuicha::find(DocWithoutTrait::class)
+            ->foo->is('xxx')
+            ->first();
+        $this->assertEquals('xxx', $x->foo);
+
+        $x->lol = 1;
+
+        $update = Tuicha\Metadata::of($x)->getSaveCommand($x);
+        $this->assertEquals(['$set' => ['lol' => 1]], $update['document']);
     }
 
     public function testCreateIndex()
@@ -94,7 +122,7 @@ class FindTest extends PHPUnit\Framework\TestCase
     public function testMany()
     {
         $x = Doc1::find();
-        $this->assertTrue($x instanceof Tuicha\Query);
+        $this->assertTrue($x instanceof Tuicha\Query\Query);
         $total = 0;
         foreach (Doc1::find() as $key => $row) {
             $this->assertTrue($row instanceof Doc1);

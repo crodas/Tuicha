@@ -41,8 +41,7 @@ use RuntimeException;
 trait Filter
 {
     protected $filter = [];
-
-    protected $math = [
+    protected static $math = [
         '>=' => '$gte',
         '>'  => '$gt',
         '<=' => '$lte',
@@ -52,6 +51,8 @@ trait Filter
         '==' => '$eq',
         '='  => '$q',
     ];
+
+
 
     /**
      * Returns the current filter array
@@ -106,11 +107,42 @@ trait Filter
      *
      * @return $this
      */
-    public function where($property, $op, $value = null)
+    public function where()
     {
-        if ($value === null) {
-            $value = $op;
+        $arguments = func_get_args();
+        if (empty($arguments)) {
+            throw new RuntimeException("where() must have at least one argument");
+        }
+
+        $property = $arguments[0];
+
+        switch (count($arguments)) {
+        case 1:
+            // One argument
+            if (is_callable($property)) {
+                // It's a function
+                return $property($this);
+            } else if (is_scalar($property)) {
+                // It is a property name
+                return new Property($this, $property);
+            }
+
+            // It's a MongoDB raw query
+            $this->filter = array_merge($this->filter, $property);
+
+            return $this;
+
+        case 2:
+            // Two arguments, name and value
             $op    = '$eq';
+            $value = $arguments[1];
+            break;
+
+        case 3:
+            // Three arguments, name, operation and value.
+            $op    = $arguments[1];
+            $value = $arguments[2];
+            break;
         }
 
         if (!empty($this->filter[$property]) && is_array($this->filter[$property])) {
@@ -119,8 +151,8 @@ trait Filter
         }
 
         $op = strtolower($op);
-        if (!empty($this->math[$op])) {
-            $op = $this->math[$op];
+        if (!empty(self::$math[$op])) {
+            $op = self::$math[$op];
         } else if ($op[0] !== '$') {
             $op = '$' . $op;
         }
@@ -425,7 +457,7 @@ trait Filter
         $this->filter = [];
 
         $callback($this);
-        
+
         $tmpfilter    = $this->filter;
         $this->filter = $filter;
 

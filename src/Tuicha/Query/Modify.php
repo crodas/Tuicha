@@ -1,7 +1,7 @@
 <?php
 /*
   +---------------------------------------------------------------------------------+
-  | Copyright (c) 2017 César D. Rodas                                               |
+  | Copyright (c) 2018 César D. Rodas                                               |
   +---------------------------------------------------------------------------------+
   | Redistribution and use in source and binary forms, with or without              |
   | modification, are permitted provided that the following conditions are met:     |
@@ -34,64 +34,93 @@
   | Authors: César Rodas <crodas@php.net>                                           |
   +---------------------------------------------------------------------------------+
 */
+namespace Tuicha\Query;
 
-namespace Tuicha;
+use Tuicha;
+use Tuicha\Fluent;
+use Tuicha\Database;
+use ArrayAccess;
+use MongoDB\Driver\WriteConcern;
 
-use Iterator;
-
-abstract class Cursor implements Iterator
+class Modify implements ArrayAccess
 {
-    protected $queried = false;
-    protected $current;
-    protected $result;
-
-    abstract protected function doQuery();
-
-    protected function setResultSet(Iterator $iterable)
-    {
-        $this->result  = $iterable;
-        $this->queried = true;
+    use Fluent\Filter {
+        __set as protected __set_filter;
     }
 
-    protected function ensureQuery()
+    protected $operation;
+    protected $collection;
+    protected $connection;
+    protected $isWriting = false;
+
+    protected $set = [];
+
+    public function __construct($operation, $collection, Database $connection)
     {
-        if (!$this->queried) {
-            $this->doQuery();
+        $this->operation  = $operation;
+        $this->collection = $collection;
+        $this->connection = $connection;
+    }
+
+    public function now($field, $type = 'date')
+    {
+        $this->set['$currentDate'][$field] = ['$type' => $type];
+        return $this;
+    }
+
+    public function add($name, $value)
+    {
+        $this->set['$inc'][$name] = $value;
+        return $this;
+    }
+
+    public function multiply($name, $value)
+    {
+        $this->set['$mul'][$name] = $value;
+    }
+
+    public function getUpdateDocument()
+    {
+        return $this->set;
+    }
+
+    public function __set($name, $value)
+    {
+        if (!$this->isWriting) {
+            return $this->__set_filter($name, $value);
         }
+
+        $this->set['$set'][$name] = $value;
+
+        return $this;
     }
 
-    public function rewind()
+    public function set($expr)
     {
-        $this->ensureQuery();
-        $this->result->rewind();
-    }
-
-    public function valid()
-    {
-        $this->ensureQuery();
-
-        if ($this->result->valid()) {
-            $this->current = $this->metadata->newInstance($this->result->current());
-            return true;
+        if (is_callable($expr)) {
+            $this->isWriting = true;
+            $expr($this);
+            $this->isWriting = false;
+            return $this;
         }
 
-        return false;
+        $this->set = array_merge($this->set, $expr);
+        return $this;
     }
 
-    public function next()
+    public function execute($wait = false, $multi = false, $upsert = false)
     {
-        $this->ensureQuery();
-        $this->result->next();
-    }
+        if ($wait === true) {
+            $wait = new WriteConcern(WriteConcern::MAJORITY);
+        }
 
-    public function current()
-    {
-        return $this->current;
+        return Tuicha::command([
+            'update' => $this->collection,
+            'updates' => [
+                ['q' => (object)$this->filter, 'u' => $this->set, 'upsert' => $upsert, 'multi' => $multi],
+            ],
+            'ordered' => true,
+            'writeConcern' => $wait,
+        ]);
     }
-
-    public function key()
-    {
-        return $this->metadata->getId($this->current);
-    }
-
 }

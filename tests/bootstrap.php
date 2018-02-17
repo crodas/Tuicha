@@ -8,3 +8,11 @@ Tuicha::addConnection("tuicha_testsuite");
 Tuicha::addDirectory(__DIR__ . '/docs');
 
 Tuicha::dropDatabase();
+
+class CustomValidator
+{
+    public static function isInt($val)
+    {
+        return is_int($val);
+    }
+}

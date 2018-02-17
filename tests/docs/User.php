@@ -10,7 +10,7 @@ class User {
     public $email;
 
     /**
-     * @Validate(is_integer, @between(0, 99))
+     * @Validate(is_integer, @between(0, 99), "CustomValidator::isInt")
      */
     public $age;
 }

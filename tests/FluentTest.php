@@ -35,7 +35,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
         $query->foo = 1;
         $this->assertFalse(empty($query['foo']));
     }
-    
+
     public function testUnset()
     {
         $query = User::find();
@@ -73,7 +73,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
             'size'  => ['$gt' => 10],
         ], $query->getFilter());
     }
-    
+
     public function testDynamicPRoperty()
     {
         $query = User::find();
@@ -121,7 +121,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
             'prop'  => ['$exists' => true],
         ], $query->getFilter());
     }
-    
+
     public function testIsNot()
     {
         $query = User::find();
@@ -302,6 +302,33 @@ class FluentTest extends PHPUnit\Framework\TestCase
     public function testInvalidDynamicCall()
     {
         USer::find()->dasdsada();
+    }
+
+    public function testUpdateFilterSetter()
+    {
+        $query = Doc1::update(function($filter) {
+                $filter->foo = 'bar';
+            })->set(function($doc) {
+                $doc->foo = 'new';
+                $doc->counter->add(10);
+            });
+
+        $this->assertEquals(['foo' => 'bar'], $query->GetFilter());
+        $this->assertEquals(['$set' => ['foo' => 'new'], '$inc' => ['counter' => 10]], $query->getUpdateDocument());
+    }
+
+    public function testWhereFieldName()
+    {
+        $q = Doc1::find()->where('foo')->is(1);
+        $this->AssertEquals(['foo' => 1], $q->getFilter());
+    }
+
+    /**
+     * @expectedException RuntimeException
+     */
+    public function testInvalidCallWhere()
+    {
+        Doc1::find()->where();
     }
 }
 

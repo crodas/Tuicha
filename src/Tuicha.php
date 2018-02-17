@@ -44,6 +44,7 @@ use Tuicha\Database;
 use Tuicha\Collection;
 use Tuicha\Operation;
 use Tuicha\Metadata;
+use Tuicha\Query\Modify;
 use Remember\Remember;
 use crodas\ClassInfo\ClassInfo;
 
@@ -94,6 +95,19 @@ class Tuicha
         return self::$connections[$connectionName];
     }
 
+    public static function find($collectionName, $query = [], $fields = [], $connection = 'default')
+    {
+        $class = 'stdclass';
+        if (class_exists($collectionName)) {
+            $class          = $collectionName;
+            $metadata       = Metadata::of($collectionName);
+            $collectionName = $metadata->getCollectionName();
+            //$connection     = $metadata->getConnectionName();
+        }
+
+        return new Tuicha\Query\Query($class, $query, $fields);
+    }
+
     /**
      * Creates an update object
      *
@@ -109,7 +123,12 @@ class Tuicha
      */
     public static function update($collectionName, $connection = 'default')
     {
-        return new Operation\Update($collectionName, self::getConnection($connection));
+        if (class_exists($collectionName)) {
+            $metadata       = Metadata::of($collectionName);
+            $collectionName = $metadata->getCollectionName();
+            //$connection     = $metadata->getConnectionName();
+        }
+        return new Modify('update', $collectionName, self::getConnection($connection));
     }
 
     /**

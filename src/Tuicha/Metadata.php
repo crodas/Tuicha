@@ -512,10 +512,6 @@ class Metadata
             return $this;
         }
 
-        if (!($object instanceof $this->className)) {
-            throw new RuntimeException("Invalid object, expecteding a {$this->className} object");
-        }
-
         foreach ($this->events as $event) {
             if ($event['is_public']) {
                 $object->{$event['method']}($event['args']);
@@ -632,7 +628,9 @@ class Metadata
             return $object->__getState();
         }
 
-        return $object->__lastInstance;
+        return !empty($object->__lastInstance)
+            ? $object->__lastInstance
+            : [];
     }
 
     /**
@@ -688,10 +686,6 @@ class Metadata
      */
     public function toDocument($object, $validate = true, $generateId = false)
     {
-        if (!($object instanceof $this->className)) {
-            throw new RuntimeException("Expecting an object of {$this->className}");
-        }
-
         $keys = array_keys((array)$object);
         $keys = array_combine($keys, $keys);
         $array = [];
