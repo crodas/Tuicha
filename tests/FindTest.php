@@ -34,16 +34,16 @@ class FindTest extends PHPUnit\Framework\TestCase
         $x->foo = 'bar';
         Tuicha::save($x);
 
-        Tuicha::update(DocWithoutTrait::class)
+        Tuicha::update('Docs\DocWithoutTrait')
             ->set(function($update) {
                 $update->foo = 'xxx';
             })->execute(true);
 
-        $x = Tuicha::find(DocWithoutTrait::class)
+        $x = Tuicha::find('Docs\DocWithoutTrait')
             ->foo->is('bar')
             ->first();
         $this->assertEquals(null, $x);
-        $x = Tuicha::find(DocWithoutTrait::class)
+        $x = Tuicha::find('Docs\DocWithoutTrait')
             ->foo->is('xxx')
             ->first();
         $this->assertEquals('xxx', $x->foo);
