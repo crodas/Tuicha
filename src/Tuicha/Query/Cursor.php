@@ -90,7 +90,11 @@ abstract class Cursor implements Iterator
 
     public function key()
     {
-        return $this->metadata->getId($this->current);
+        $id = $this->metadata->getId($this->current);
+        if (version_compare(PHP_VERSION, '5.5', '<=')) {
+            $id = (string)$id;
+        }
+        return $id;
     }
 
 }
