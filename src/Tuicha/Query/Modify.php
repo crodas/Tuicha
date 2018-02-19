@@ -123,7 +123,7 @@ class Modify implements ArrayAccess
     }
 
 
-    public function execute($wait = false, $multi = false, $upsert = false)
+    public function execute($wait = null, $multi = false, $upsert = false)
     {
         if ($wait === true) {
             $wait = new WriteConcern(WriteConcern::MAJORITY);
