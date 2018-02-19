@@ -53,7 +53,7 @@ class Modify implements ArrayAccess
     protected $connection;
     protected $isWriting = false;
 
-    protected $set = [];
+    protected $update = [];
 
     public function __construct($operation, $collection, Database $connection)
     {
@@ -64,24 +64,33 @@ class Modify implements ArrayAccess
 
     public function now($field, $type = 'date')
     {
-        $this->set['$currentDate'][$field] = ['$type' => $type];
+        $this->update['$currentDate'][$field] = ['$type' => $type];
         return $this;
     }
 
     public function add($name, $value)
     {
-        $this->set['$inc'][$name] = $value;
+        $this->update['$inc'][$name] = $value;
         return $this;
     }
 
     public function multiply($name, $value)
     {
-        $this->set['$mul'][$name] = $value;
+        $this->update['$mul'][$name] = $value;
     }
 
-    public function getUpdateDocument()
+    public function rename($old, $new)
     {
-        return $this->set;
+        $this->update['$rename'][$old] = $new;
+        return $this;
+    }
+
+    public function unset()
+    {
+        foreach (func_get_args() as $property) {
+            $this->update['$unset'][$property] = '';
+        }
+        return $this;
     }
 
     public function __set($name, $value)
@@ -90,7 +99,7 @@ class Modify implements ArrayAccess
             return $this->__set_filter($name, $value);
         }
 
-        $this->set['$set'][$name] = $value;
+        $this->update['$set'][$name] = $value;
 
         return $this;
     }
@@ -104,9 +113,15 @@ class Modify implements ArrayAccess
             return $this;
         }
 
-        $this->set = array_merge($this->set, $expr);
+        $this->update = array_merge($this->update, $expr);
         return $this;
     }
+
+    public function getUpdateDocument()
+    {
+        return $this->update;
+    }
+
 
     public function execute($wait = false, $multi = false, $upsert = false)
     {
@@ -114,11 +129,19 @@ class Modify implements ArrayAccess
             $wait = new WriteConcern(WriteConcern::MAJORITY);
         }
 
+        $updates = [];
+        foreach ($this->update as $operation => $values) {
+            $updates[] = [
+                'q' => (object)$this->filter,
+                'u' => [$operation => $values],
+                'upsert' => $upsert,
+                'multi'  => $multi,
+            ];
+        }
+
         return Tuicha::command([
             'update' => $this->collection,
-            'updates' => [
-                ['q' => (object)$this->filter, 'u' => $this->set, 'upsert' => $upsert, 'multi' => $multi],
-            ],
+            'updates' => $updates,
             'ordered' => true,
             'writeConcern' => $wait,
         ]);

@@ -24,4 +24,31 @@ class TuichaModifyTest extends PHPUnit\Framework\TestCase
         $this->assertEquals(25, $updated->num);
         $this->assertEquals('MongoDB\BSON\UTCDateTime', get_class($updated->updated));
     }
+
+    public function testUpdateRename()
+    {
+        $query = Doc1::update()
+            ->where(function($q) {
+                $q->foo = 'bar';
+            })->set(function($s) {
+                $s->foo->rename('bar');
+            });
+
+        $this->assertEquals(['foo' => 'bar'], $query->getFilter());
+        $this->assertEquals(['$rename' => ['foo' => 'bar']], $query->getUpdateDocument());
+    }
+
+    public function testUpdateUnset()
+    {
+        $query = Doc1::update()
+            ->where(function($q) {
+                $q->foo = 'bar';
+            })->set(function($s) {
+                $s->foo->unset();
+                $s->bar->unset();
+            });
+
+        $this->assertEquals(['foo' => 'bar'], $query->getFilter());
+        $this->assertEquals(['$unset' => ['foo' => '', 'bar' => '']], $query->getUpdateDocument());
+    }
 }
