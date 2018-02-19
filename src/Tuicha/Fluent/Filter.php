@@ -121,7 +121,8 @@ trait Filter
             // One argument
             if (is_callable($property)) {
                 // It's a function
-                return $property($this);
+                $property($this);
+                return $this;
             } else if (is_scalar($property)) {
                 // It is a property name
                 return new Property($this, $property);

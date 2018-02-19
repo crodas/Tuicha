@@ -35,6 +35,9 @@ class FindTest extends PHPUnit\Framework\TestCase
         Tuicha::save($x);
 
         Tuicha::update('Docs\DocWithoutTrait')
+            ->where(function($query) {
+                $query->foo = 'bar';
+            })
             ->set(function($update) {
                 $update->foo = 'xxx';
             })->execute(true);
@@ -43,6 +46,7 @@ class FindTest extends PHPUnit\Framework\TestCase
             ->foo->is('bar')
             ->first();
         $this->assertEquals(null, $x);
+
         $x = Tuicha::find('Docs\DocWithoutTrait')
             ->foo->is('xxx')
             ->first();
