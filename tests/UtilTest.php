@@ -1,6 +1,7 @@
 <?php
 
 use Tuicha\Util;
+use Tuicha\Update;
 
 class UtilTest extends PHPUnit\Framework\TestCase
 {
@@ -25,5 +26,15 @@ class UtilTest extends PHPUnit\Framework\TestCase
             'update' => [1 => 2],
             'add' => [],
         ], Util::arrayDiff($old, $new));
+    }
+
+    public function testArrayDiffToQuery()
+    {
+        $old  = [1, 2, 3];
+        $new  = [1, 4, 9, 129, 133];
+        $diff = Update::diff(['x' => $old], ['x' => $new]);
+
+        $this->assertEquals($diff['$set'],  ['x.1' => 2, 'x.2' => 3]);
+        $this->assertEquals($diff['$pullAll'],  ['x' => [129, 133]]);
     }
 }

@@ -38,8 +38,8 @@
 namespace Tuicha;
 
 use Tuicha;
+use Tuicha\Query\Query;
 use MongoDB\BSON\ObjectID;
-use MongoDB\Driver\WriteConcern;
 
 /**
  * Base document
@@ -147,30 +147,44 @@ trait Document
     /**
      * Updates documents matching a selector.
      *
-     * @param array $selector
-     * @param array $document
-     * @param boolean $upsert
-     * @param boolean $multi
-     * @param boolean $wait
+     * @param array|callable $where
+     * @param array|callable $set
      *
-     * @return MongoDB\Driver\Cursor
+     * @return Tuicha\Query\Update
      */
-    final static function update(Array $selector, Array $document, $upsert = false, $multi = true, $wait = true)
+    final static function update($where = null, $set = null)
     {
-        if ($wait === true) {
-            $wait = new WriteConcern(WriteConcern::MAJORITY);
+        $metadata = Metadata::of(__CLASS__);
+        $query    = Tuicha::update($metadata->getCollectionName());
+
+        if ($where !== null) {
+            $query->where($where);
         }
 
-        $update = Tuicha::command([
-            'update' => Metadata::of(__CLASS__)->getCollectionName(),
-            'updates' => [
-                ['q' => $selector, 'u' => $document, 'upsert' => $upsert, 'multi' => $multi],
-            ],
-            'ordered' => true,
-            'writeConcern' => $wait,
-        ]);
+        if ($set !== null) {
+            $query->set($set);
+        }
 
-        return $update;
+        return $query;
+    }
+
+    /**
+     * Deletes document from the collection
+     *
+     * @param array|callable $where
+     *
+     * @return Tuicha\Query\Update
+     */
+    final static function delete($where = null)
+    {
+        $metadata = Metadata::of(__CLASS__);
+        $query    = Tuicha::delete($metadata->getCollectionName());
+
+        if ($where !== null) {
+            $query->where($where);
+        }
+
+        return $query;
     }
 
     /**

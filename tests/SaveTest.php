@@ -65,9 +65,12 @@ class TestSave extends PHPUnit\Framework\TestCase
         $x->x = [1, 2, 6, 7, 4];
         $update = Metadata::of($x)->getSaveCommand($x);
         $this->assertEquals('update', $update['command']);
-
         $x->save();
         $this->assertEquals($x->x, Doc1::find(['_id' => $x->id])->first()->x);
+
+        $x->x = fopen(__FILE__, 'r'); // It should be ignored
+        $doc  = Metadata::of($x)->toDocument($x);
+        $this->assertEquals(['_id'], array_keys($doc));
     }
 
     public function testSaveNestedObject()
