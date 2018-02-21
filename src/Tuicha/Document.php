@@ -147,18 +147,15 @@ trait Document
     /**
      * Updates documents matching a selector.
      *
-     * @param array $selector
-     * @param array $document
-     * @param boolean $upsert
-     * @param boolean $multi
-     * @param boolean $wait
+     * @param array|callable $where
+     * @param array|callable $set
      *
-     * @return MongoDB\Driver\Cursor
+     * @return Tuicha\Query\Update
      */
     final static function update($where = null, $set = null)
     {
         $metadata = Metadata::of(__CLASS__);
-        $query = Tuicha::update($metadata->getCollectionName());
+        $query    = Tuicha::update($metadata->getCollectionName());
 
         if ($where !== null) {
             $query->where($where);
@@ -166,6 +163,25 @@ trait Document
 
         if ($set !== null) {
             $query->set($set);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Deletes document from the collection
+     *
+     * @param array|callable $where
+     *
+     * @return Tuicha\Query\Update
+     */
+    final static function delete($where = null)
+    {
+        $metadata = Metadata::of(__CLASS__);
+        $query    = Tuicha::delete($metadata->getCollectionName());
+
+        if ($where !== null) {
+            $query->where($where);
         }
 
         return $query;

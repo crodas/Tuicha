@@ -44,7 +44,8 @@ use Tuicha\Database;
 use Tuicha\Collection;
 use Tuicha\Operation;
 use Tuicha\Metadata;
-use Tuicha\Query\Modify;
+use Tuicha\Query\Update;
+use Tuicha\Query\Delete;
 use Remember\Remember;
 use crodas\ClassInfo\ClassInfo;
 
@@ -113,13 +114,13 @@ class Tuicha
      *
      * Creates an update object for a collectionName through a connection.
      *
-     * The update object with an fluent interface that allows to modify the update
+     * The update object has an fluent interface that allows to modify the update
      * before sending it to the database.
      *
      * @param string $collectionName    The collection name
      * @param string $connection        The connection name
      *
-     * @return Tuicha\Operation\Update
+     * @return Tuicha\Query\Update
      */
     public static function update($collectionName, $connection = 'default')
     {
@@ -128,7 +129,29 @@ class Tuicha
             $collectionName = $metadata->getCollectionName();
             //$connection     = $metadata->getConnectionName();
         }
-        return new Modify('update', $collectionName, self::getConnection($connection));
+        return new Update($collectionName, self::getConnection($connection));
+    }
+
+    /**
+     * Creates an delete object
+     *
+     * Creates an delete object for a collectionName through a connection.
+     *
+     * The delete object has an fluent interface.
+     *
+     * @param string $collectionName    The collection name
+     * @param string $connection        The connection name
+     *
+     * @return Tuicha\Query\Delete
+     */
+    public static function delete($collectionName, $connection = 'default')
+    {
+        if (class_exists($collectionName)) {
+            $metadata       = Metadata::of($collectionName);
+            $collectionName = $metadata->getCollectionName();
+            //$connection     = $metadata->getConnectionName();
+        }
+        return new Delete($collectionName, self::getConnection($connection));
     }
 
     /**

@@ -50,5 +50,26 @@ class TuichaModifyTest extends PHPUnit\Framework\TestCase
 
         $this->assertEquals(['foo' => 'bar'], $query->getFilter());
         $this->assertEquals(['$unset' => ['foo' => '', 'bar' => '']], $query->getUpdateDocument());
+        $result = $query->execute();
+    }
+
+    public function testOptions()
+    {
+        $x = Doc1::update();
+        $this->assertEquals(['wait' => true, 'upsert' => false, 'multi' => true], $x->getOptions());
+
+        $x->multi(false);
+        $x->wait(false);
+        $x->upsert(true);
+        $this->assertEquals(['wait' => false, 'upsert' => true, 'multi' => false], $x->getOptions());
+    }
+
+    public function testDelete()
+    {
+        $this->assertNotEquals(0, Doc1::count());
+
+        Doc1::delete()->execute();
+
+        $this->assertEquals(0, Doc1::count());
     }
 }

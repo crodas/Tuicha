@@ -36,65 +36,30 @@
 */
 namespace Tuicha\Query;
 
-use Tuicha\Fluent;
-use Tuicha\Database;
-use ArrayAccess;
+use MongoDB\Driver\WriteConcern;
+use Tuicha;
 
-abstract class Modify implements ArrayAccess
+class Delete extends Modify
 {
-    use Fluent\Filter;
-
-    protected $collection;
-    protected $connection;
-    protected $options = [
-        'wait' => true,
-        'multi' => true,
-    ];
-
-    public function __construct($collection, Database $connection)
-    {
-        $this->collection = $collection;
-        $this->connection = $connection;
-    }
-
     /**
-     * Toggle on or off the multi option
+     * Executes the operation.
      *
-     * The multi option tells the engine to modify at most one document if it is OFF,
-     * otherwise it will modify all the documents that matches the filtering criteria.
+     * @param bool $wait    If null it's ignored and the class variable is used
      *
-     * @param bool $multi
-     *
-     * @return $this
      */
-    public function multi($multi = true)
+    public function execute($wait = null)
     {
-        $this->options['multi'] = (bool) $multi;
-        return $this;
-    }
+        $options = array_merge($this->options, array_filter(compact('wait', 'multi', 'upsert'), 'is_bool'));
 
+        $wConcern = new WriteConcern($options['wait'] ? WriteConcern::MAJORITY : '');
 
-    /**
-     * Tell the command to wait until the operation is confirmed by the
-     * database engine.
-     *
-     * @param bool $wait    Wether to wait or not.
-     *
-     * @return $this
-     */
-    public function wait($wait = true)
-    {
-        $this->options['wait'] = (bool) $wait;
-        return $this;
-    }
-
-    /**
-     * Returns the options for the current operation
-     *
-     * @return $this
-     */
-    public function getOptions()
-    {
-        return $this->options;
+        return Tuicha::command([
+            'delete' => $this->collection,
+            'deletes' => [
+                ['q' => (object)$this->filter, 'limit' => $options['multi'] ? 0 : 1, 'collation' => (object)[]],
+            ],
+            'ordered' => true,
+            'writeConcern' => $wConcern,
+        ]);
     }
 }
