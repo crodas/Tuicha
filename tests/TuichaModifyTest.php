@@ -66,9 +66,23 @@ class TuichaModifyTest extends PHPUnit\Framework\TestCase
 
     public function testDelete()
     {
+        $x = new Doc1;
+        $x->save();
         $this->assertNotEquals(0, Doc1::count());
 
         Doc1::delete()->execute();
+
+        $this->assertEquals(0, Doc1::count());
+    }
+
+    public function testDeleteTuicha()
+    {
+        $x = new Doc1;
+        $x->save();
+
+        $this->assertNotEquals(0, Doc1::count());
+
+        Tuicha::delete('Docs\Doc1')->execute();
 
         $this->assertEquals(0, Doc1::count());
     }
