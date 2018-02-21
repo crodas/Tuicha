@@ -42,13 +42,15 @@ class TuichaModifyTest extends PHPUnit\Framework\TestCase
     {
         $query = Doc1::update()
             ->where(function($q) {
-                $q->foo = 'bar';
+                $q->or(function($q) {
+                    $q->foo = 'bar';
+                });
             })->set(function($s) {
                 $s->foo->unset();
-                $s->bar->unset();
+                $s->bar->remove();
             });
 
-        $this->assertEquals(['foo' => 'bar'], $query->getFilter());
+        $this->assertEquals(['$or' => [['foo' => 'bar']]], $query->getFilter());
         $this->assertEquals(['$unset' => ['foo' => '', 'bar' => '']], $query->getUpdateDocument());
         $result = $query->execute();
     }

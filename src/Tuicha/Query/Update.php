@@ -156,12 +156,27 @@ class Update extends Modify
      *
      * @return $this
      */
-    public function unset()
+    public function remove()
     {
         foreach (func_get_args() as $property) {
             $this->update['$unset'][$property] = '';
         }
         return $this;
+    }
+
+    /**
+     * @aliasof remove
+     */
+    public function __call($name, $args)
+    {
+        if (strtolower($name) === 'unset') {
+            foreach ($args as $property) {
+                $this->update['$unset'][$property] = '';
+            }
+            return $this;
+        }
+
+        return parent::__call($name, $args);
     }
 
     /**
