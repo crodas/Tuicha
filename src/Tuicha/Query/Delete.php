@@ -1,7 +1,7 @@
 <?php
 /*
   +---------------------------------------------------------------------------------+
-  | Copyright (c) 2017 César D. Rodas                                               |
+  | Copyright (c) 2018 César D. Rodas                                               |
   +---------------------------------------------------------------------------------+
   | Redistribution and use in source and binary forms, with or without              |
   | modification, are permitted provided that the following conditions are met:     |
@@ -34,61 +34,32 @@
   | Authors: César Rodas <crodas@php.net>                                           |
   +---------------------------------------------------------------------------------+
 */
+namespace Tuicha\Query;
 
-namespace Tuicha;
+use MongoDB\Driver\WriteConcern;
+use Tuicha;
 
-use Iterator;
-
-abstract class Cursor implements Iterator
+class Delete extends Modify
 {
-    protected $queried = false;
-    protected $result;
-
-    abstract protected function doQuery();
-
-    protected function setResultSet(Iterator $iterable)
+    /**
+     * Executes the operation.
+     *
+     * @param bool $wait    If null it's ignored and the class variable is used
+     *
+     */
+    public function execute($wait = null)
     {
-        $this->result  = $iterable;
-        $this->queried = true;
-    }
+        $options = array_merge($this->options, array_filter(compact('wait', 'multi', 'upsert'), 'is_bool'));
 
-    protected function ensureQuery()
-    {
-        if (!$this->queried) {
-            $this->doQuery();
-        }
-    }
+        $wConcern = new WriteConcern($options['wait'] ? WriteConcern::MAJORITY : '');
 
-    public function rewind()
-    {
-        $this->ensureQuery();
-        $this->result->rewind();
+        return Tuicha::command([
+            'delete' => $this->collection,
+            'deletes' => [
+                ['q' => (object)$this->filter, 'limit' => $options['multi'] ? 0 : 1, 'collation' => (object)[]],
+            ],
+            'ordered' => true,
+            'writeConcern' => $wConcern,
+        ]);
     }
-
-    public function valid()
-    {
-        $this->ensureQuery();
-        return $this->result->valid();
-    }
-
-    public function next()
-    {
-        $this->ensureQuery();
-        $this->result->next();
-    }
-
-    public function current()
-    {
-        $this->ensureQuery();
-        return $this->metadata->newInstance($this->result->current());
-    }
-
-    public function key()
-    {
-        if (!$this->queried) {
-            $this->doQuery();
-        }
-        return $this->metadata->getId($this->current);
-    }
-
 }

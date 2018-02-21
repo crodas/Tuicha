@@ -42,7 +42,10 @@ use MongoDB\BSON\ObjectID;
 use MongoDB\Driver\WriteConcern;
 use Tuicha\Database;
 use Tuicha\Collection;
+use Tuicha\Operation;
 use Tuicha\Metadata;
+use Tuicha\Query\Update;
+use Tuicha\Query\Delete;
 use Remember\Remember;
 use crodas\ClassInfo\ClassInfo;
 
@@ -93,9 +96,62 @@ class Tuicha
         return self::$connections[$connectionName];
     }
 
+    public static function find($collectionName, $query = [], $fields = [], $connection = 'default')
+    {
+        $class = 'stdclass';
+        if (class_exists($collectionName)) {
+            $class          = $collectionName;
+            $metadata       = Metadata::of($collectionName);
+            $collectionName = $metadata->getCollectionName();
+            //$connection     = $metadata->getConnectionName();
+        }
+
+        return new Tuicha\Query\Query($class, $query, $fields);
+    }
+
+    /**
+     * Creates an update object
+     *
+     * Creates an update object for a collectionName through a connection.
+     *
+     * The update object has an fluent interface that allows to modify the update
+     * before sending it to the database.
+     *
+     * @param string $collectionName    The collection name
+     * @param string $connection        The connection name
+     *
+     * @return Tuicha\Query\Update
+     */
     public static function update($collectionName, $connection = 'default')
     {
-        return new Operation\Update($collectionName, self::getConnect($connection));
+        if (class_exists($collectionName)) {
+            $metadata       = Metadata::of($collectionName);
+            $collectionName = $metadata->getCollectionName();
+            //$connection     = $metadata->getConnectionName();
+        }
+        return new Update($collectionName, self::getConnection($connection));
+    }
+
+    /**
+     * Creates an delete object
+     *
+     * Creates an delete object for a collectionName through a connection.
+     *
+     * The delete object has an fluent interface.
+     *
+     * @param string $collectionName    The collection name
+     * @param string $connection        The connection name
+     *
+     * @return Tuicha\Query\Delete
+     */
+    public static function delete($collectionName, $connection = 'default')
+    {
+        if (class_exists($collectionName)) {
+            $metadata       = Metadata::of($collectionName);
+            $collectionName = $metadata->getCollectionName();
+            //$connection     = $metadata->getConnectionName();
+        }
+        return new Delete($collectionName, self::getConnection($connection));
     }
 
     /**

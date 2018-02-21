@@ -512,10 +512,6 @@ class Metadata
             return $this;
         }
 
-        if (!($object instanceof $this->className)) {
-            throw new RuntimeException("Invalid object, expecteding a {$this->className} object");
-        }
-
         foreach ($this->events as $event) {
             if ($event['is_public']) {
                 $object->{$event['method']}($event['args']);
@@ -557,8 +553,6 @@ class Metadata
     {
         $class  = $this->className;
         $object = new $this->className;
-        $state  = [];
-
         foreach ($document as $key => $value) {
             $prop = null;
             if (!empty($this->pProps[$key]) ||  !empty($this->mProps[$key])) {
@@ -579,13 +573,23 @@ class Metadata
                 $property->setAccessible(true);
                 $property->setValue($object, $value);
             }
-
-            $state[$key] = $value;
         }
 
         $this->snapshot($object, $document);
 
         return $object;
+    }
+
+    public function getId($object)
+    {
+        $id = $this->pProps[$this->idProperty];
+        if ($id['is_public']) {
+            return $object->{$id['phpProp']};
+        }
+
+        $property = new ReflectionProperty($this->className, $id['phpProp']);
+        $property->setAccessible(true);
+        return $property->getValue($object);
     }
 
     /**
@@ -624,7 +628,9 @@ class Metadata
             return $object->__getState();
         }
 
-        return $object->__lastInstance;
+        return !empty($object->__lastInstance)
+            ? $object->__lastInstance
+            : [];
     }
 
     /**
@@ -680,10 +686,6 @@ class Metadata
      */
     public function toDocument($object, $validate = true, $generateId = false)
     {
-        if (!($object instanceof $this->className)) {
-            throw new RuntimeException("Expecting an object of {$this->className}");
-        }
-
         $keys = array_keys((array)$object);
         $keys = array_combine($keys, $keys);
         $array = [];
@@ -745,7 +747,7 @@ class Metadata
                 $object->{$this->idProperty} = $array['_id'];
             } else {
                 $property = new ReflectionProperty($object, $this->idProperty);
-                $property->setAccesible(true);
+                $property->setAccessible(true);
                 $property->setValue($object, $array['_id']);
             }
         }

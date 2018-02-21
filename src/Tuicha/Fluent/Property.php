@@ -1,7 +1,7 @@
 <?php
 /*
   +---------------------------------------------------------------------------------+
-  | Copyright (c) 2017 César D. Rodas                                               |
+  | Copyright (c) 2018 César D. Rodas                                               |
   +---------------------------------------------------------------------------------+
   | Redistribution and use in source and binary forms, with or without              |
   | modification, are permitted provided that the following conditions are met:     |
@@ -34,73 +34,33 @@
   | Authors: César Rodas <crodas@php.net>                                           |
   +---------------------------------------------------------------------------------+
 */
+namespace Tuicha\Fluent;
 
-namespace Tuicha;
-
-use Tuicha;
-use IteratorIterator;
-use MongoDB\Driver;
-use MongoDB\Driver\Command;
-
-class Query extends Cursor
+class Property
 {
-    protected $collection;
     protected $query;
-    protected $fields;
-    protected $metadata;
-    protected $namespace;
-    protected $class;
-    protected $filters = [];
+    protected $property;
 
-    public function __construct($class, $query, $fields)
+    public function __construct($query, $property)
     {
-        $this->class      = $class;
-        $this->metadata   = Metadata::of($class);
-        $this->query      = $query;
-        $this->fields     = $fields;
-        $this->collection = $this->metadata->getCollection();
+        $this->query    = $query;
+        $this->property = $property;
     }
 
-    protected function doQuery()
+    public function __call($function, $args)
     {
-        $query = new Driver\Query($this->query, [
-            'selector' => $this->fields,
-        ]);
-
-        $cursor = $this->collection->query($query);
-        $cursor->setTypeMap(['root' => 'array', 'document' => 'stdclass', 'array' => 'array']);
-        $this->setResultSet(new IteratorIterator($cursor));
+        array_unshift($args, $this->property);
+        return call_user_func_array([$this->query, $function], $args);
     }
 
-    public function first()
+    public function __set($name, $value)
     {
-        $query = new Driver\Query($this->query, [
-            'selector' => $this->fields,
-            'limit' => 1,
-        ]);
-
-        $cursor = $this->collection->query($query);
-        $cursor->setTypeMap(['root' => 'array', 'document' => 'stdclass', 'array' => 'array']);
-
-        $result = $cursor->toArray();
-
-        if (empty($result)) {
-            return NULL;
-        }
-
-        return $this->metadata->newInstance($result[0]);
+        return $this->query->where($this->property . '.' . $name, $value);
     }
 
-    public function filter(Callable $fnc)
+    public function __get($property)
     {
-        $this->filters[] = $fnc;
-    }
-
-    public function count()
-    {
-        return Tuicha::command([
-            'count' => $this->metadata->GetCollectionName(),
-            'query' => $this->query,
-        ], $this->collection)->toArray()[0]->n;
+        return new self($this->query, $this->property . '.' . $property);
     }
 }
+
