@@ -36,9 +36,10 @@
 */
 namespace Tuicha\Query;
 
+use Tuicha\Fluent\Filter;
 use Iterator;
 
-abstract class Cursor implements Iterator
+abstract class Cursor extends Filter implements Iterator
 {
     protected $queried = false;
     protected $current;

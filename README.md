@@ -14,7 +14,7 @@ composer require tuicha/tuicha:dev-develop
 
 ## Getting started
 
-Tuicha is designed to be simple and friendly with every framework, that is why it uses and abuses with static methods.
+Tuicha is designed to be simple and friendly with every framework, that is why it uses and abuses of static methods.
 
 ### Creating a conection
 
@@ -32,23 +32,33 @@ Tuicha::addConnection("tuicha_testsuite", "mongodb://8.8.8.8:27017");
 
 ### Defining models
 
-#### Basic definition
+#### Basic usage
 
-Any object which uses the `Tuicha\Document` trait can be stored in MongoDB with Tuicha.
+Any object which uses the `Tuicha\Document` trait can be stored in MongoDB with Tuicha seamlessly.
 
-```php 
-class Books {
+```php
+class Book {
   use Tuicha\Document;
 }
 
-$x = new Books;
+$x = new Book;
+$x->id = 1;
 $x->name = "foobar";
 $x->save(); // save
-
-var_dump($x->id); // Object ID
 ```
 
-Any property (defined or not in the class definition) will be stored in MongoDB.
+Finding document is quite straightforward as well:
+
+```php
+$books = Book::find(function($query) {
+    $query->name = 'foobar';
+});
+
+foreach ($books as $book) {
+    echo $book->name . "\n";
+}
+```
+
 
 # TODO
 

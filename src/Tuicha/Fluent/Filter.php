@@ -38,7 +38,7 @@ namespace Tuicha\Fluent;
 
 use RuntimeException;
 
-trait Filter
+abstract class Filter
 {
     protected $filter = [];
     protected static $math = [

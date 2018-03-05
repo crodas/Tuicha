@@ -72,6 +72,12 @@ class TuichaModifyTest extends PHPUnit\Framework\TestCase
         $x->save();
         $this->assertNotEquals(0, Doc1::count());
 
+        Doc1::delete(function($q) {
+            $q->foo = uniqid(true);
+        })->execute();
+
+        $this->assertNotEquals(0, Doc1::count());
+
         Doc1::delete()->execute();
 
         $this->assertEquals(0, Doc1::count());

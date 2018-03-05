@@ -95,7 +95,13 @@ class FindTest extends PHPUnit\Framework\TestCase
      */
     public function testFindOneWithResult()
     {
-        $doc = Doc1::find(['bar' => 'lol'])->first();
+        $doc = Doc1::find(function($q) {
+            $q->bar = uniqid('', true);
+        })->first();
+        $this->assertNull($doc);
+        $doc = Doc1::find(function($q) {
+            $q->bar = 'lol';
+        })->first();
         $this->assertNotNull($doc);
         $this->assertTrue($doc instanceof Doc1);
         $this->assertEquals('lol', $doc->bar);

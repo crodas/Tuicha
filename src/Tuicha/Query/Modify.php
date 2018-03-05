@@ -36,14 +36,12 @@
 */
 namespace Tuicha\Query;
 
-use Tuicha\Fluent;
+use Tuicha\Fluent\Filter;
 use Tuicha\Database;
 use ArrayAccess;
 
-abstract class Modify implements ArrayAccess
+abstract class Modify extends Filter implements ArrayAccess
 {
-    use Fluent\Filter;
-
     protected $collection;
     protected $connection;
     protected $options = [

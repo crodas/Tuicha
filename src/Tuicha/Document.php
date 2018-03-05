@@ -69,12 +69,12 @@ trait Document
     /**
      * Finds documents in a collection.
      *
-     * @param array $query
+     * @param array|callable $query
      * @param array $fields
      *
      * @return Tuicha\Query
      */
-    final static function find(Array $query = [], Array $fields = [])
+    final static function find($query = [], Array $fields = [])
     {
         return new Query(__CLASS__, $query, $fields);
     }
@@ -134,11 +134,11 @@ trait Document
     /**
      * Counts how many records matches a query.
      *
-     * @param array $query
+     * @param array|callback $query
      *
      * @return int
      */
-    final static function count(Array $query = [])
+    final static function count($query = [])
     {
         $q = new Query(__CLASS__, $query, []);
         return $q->count();

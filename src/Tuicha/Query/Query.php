@@ -38,7 +38,6 @@ namespace Tuicha\Query;
 
 use Tuicha;
 use Tuicha\Metadata;
-use Tuicha\Fluent;
 use ArrayAccess;
 use IteratorIterator;
 use MongoDB\Driver;
@@ -46,8 +45,6 @@ use MongoDB\Driver\Command;
 
 class Query extends Cursor implements ArrayAccess
 {
-    use Fluent\Filter;
-
     protected $collection;
     protected $fields;
     protected $metadata;
@@ -58,9 +55,10 @@ class Query extends Cursor implements ArrayAccess
     {
         $this->class      = $class;
         $this->metadata   = Metadata::of($class);
-        $this->filter     = $filter;
+        $this->filter     = [];
         $this->fields     = $fields;
         $this->collection = $this->metadata->getCollection();
+        $this->where($filter);
     }
 
     protected function doQuery()
