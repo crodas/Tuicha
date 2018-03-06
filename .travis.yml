@@ -4,7 +4,6 @@ sudo: required
 dist: trusty
 
 php:
-  - 5.4
   - 5.5
   - 5.6
   - 7.0
@@ -31,10 +30,6 @@ matrix:
     - php: 7.0
       env: DRIVER_VERSION=devel SERVER_VERSION=3.2
   exclude:
-    - php: 5.4
-      env: DRIVER_VERSION=stable SERVER_VERSION=2.6
-    - php: 5.4
-      env: DRIVER_VERSION=stable SERVER_VERSION=3.0
     - php: 5.5
       env: DRIVER_VERSION=stable SERVER_VERSION=2.6
     - php: 5.5

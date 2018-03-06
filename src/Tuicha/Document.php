@@ -76,7 +76,7 @@ trait Document
      */
     final static function find($query = [], Array $fields = [])
     {
-        return new Query(__CLASS__, $query, $fields);
+        return new Query(static::class, $query, $fields);
     }
 
     /**
@@ -126,8 +126,8 @@ trait Document
     final public static function createIndex()
     {
         return Tuicha::command([
-            'createIndexes' => Metadata::of(__CLASS__)->getCollectionName(),
-            'indexes' => Metadata::of(__CLASS__)->getIndexes(),
+            'createIndexes' => Metadata::of(static::class)->getCollectionName(),
+            'indexes' => Metadata::of(static::class)->getIndexes(),
         ]);
     }
 
@@ -140,7 +140,7 @@ trait Document
      */
     final static function count($query = [])
     {
-        $q = new Query(__CLASS__, $query, []);
+        $q = new Query(static::class, $query, []);
         return $q->count();
     }
 
@@ -154,7 +154,7 @@ trait Document
      */
     final static function update($where = null, $set = null)
     {
-        $metadata = Metadata::of(__CLASS__);
+        $metadata = Metadata::of(static::class);
         $query    = Tuicha::update($metadata->getCollectionName());
 
         if ($where !== null) {
@@ -177,7 +177,7 @@ trait Document
      */
     final static function delete($where = null)
     {
-        $metadata = Metadata::of(__CLASS__);
+        $metadata = Metadata::of(static::class);
         $query    = Tuicha::delete($metadata->getCollectionName());
 
         if ($where !== null) {

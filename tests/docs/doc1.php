@@ -3,8 +3,7 @@
 namespace Docs;
 
 /** @Persist("document1") */
-class Doc1 {
-    use \Tuicha\Document;
-
+class Doc1 extends DocBase
+{
     public $x;
 }
