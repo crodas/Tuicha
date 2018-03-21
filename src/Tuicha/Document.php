@@ -117,21 +117,6 @@ trait Document
     }
 
     /**
-     * Creates indexes
-     *
-     * Creates indexes in this collection. All the information is provided by the Metadata object.
-     *
-     * @return MongoDB\Driver\Cursor
-     */
-    final public static function createIndex()
-    {
-        return Tuicha::command([
-            'createIndexes' => Metadata::of(static::class)->getCollectionName(),
-            'indexes' => Metadata::of(static::class)->getIndexes(),
-        ]);
-    }
-
-    /**
      * Counts how many records matches a query.
      *
      * @param array|callback $query
@@ -188,6 +173,25 @@ trait Document
     }
 
     /**
+     * Creates a new document
+     *
+     * Creates a new document from an array. The document is stored in the database before returning.
+     *
+     * @return object
+     */
+    final static function create(Array $data)
+    {
+        $document = new self;
+        foreach ($data as $key => $value) {
+            $document->$key = $value;
+        }
+
+        $document->save();
+
+        return $document;
+    }
+
+    /**
      * Saves the changes in the current document/object.
      *
      * @param boolean $wait
@@ -198,4 +202,20 @@ trait Document
     {
         return Tuicha::save($this, $wait);
     }
+
+    /**
+     * Creates indexes
+     *
+     * Creates indexes in this collection. All the information is provided by the Metadata object.
+     *
+     * @return MongoDB\Driver\Cursor
+     */
+    final public static function createIndex()
+    {
+        return Tuicha::command([
+            'createIndexes' => Metadata::of(static::class)->getCollectionName(),
+            'indexes' => Metadata::of(static::class)->getIndexes(),
+        ]);
+    }
+
 }
