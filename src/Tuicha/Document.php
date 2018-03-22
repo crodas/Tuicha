@@ -218,7 +218,7 @@ trait Document
      *
      * @return string
      */
-    public function getKeyName()
+    public static function getKeyName()
     {
         return Metadata::of(self::class)->getIdProperty();
     }

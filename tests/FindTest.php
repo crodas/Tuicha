@@ -121,7 +121,7 @@ class FindTest extends PHPUnit\Framework\TestCase
      */
     public function testUpdate()
     {
-        $doc = Doc1::find(['bar' => 'lol'])->first();
+        $doc = Doc1::newQuery()->where(['bar' => 'lol'])->first();
         $doc->bar = 'xxx';
         $doc->save();
 
@@ -136,6 +136,8 @@ class FindTest extends PHPUnit\Framework\TestCase
     {
         $doc = Doc1::create(['bar' => 'lolxxx']);
         $this->assertEquals($doc, Doc1::find(['id' => $doc->id])->first());
+        $this->assertEquals('id', Doc1::getKeyName());
+        $this->assertEquals('id', $doc->getKeyName());
     }
 
     public function testMany()
