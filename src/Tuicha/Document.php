@@ -80,6 +80,16 @@ trait Document
     }
 
     /**
+     * Returns an empty query object.
+     *
+     * @return Tuicha\Query
+     */
+    final static function newQuery()
+    {
+        return new Query(static::class, [], []);
+    }
+
+    /**
      * Finds one document in a collection or returns a new object
      *
      * @param array $query
@@ -201,6 +211,16 @@ trait Document
     public function save($wait = true)
     {
         return Tuicha::save($this, $wait);
+    }
+
+    /**
+     * Returns the property name where the Document ID is mapped.
+     *
+     * @return string
+     */
+    public function getKeyName()
+    {
+        return Metadata::of(self::class)->getIdProperty();
     }
 
     /**

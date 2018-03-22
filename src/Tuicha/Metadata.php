@@ -580,6 +580,21 @@ class Metadata
         return $object;
     }
 
+    /**
+     * Returns the property name where the Document Id is stored.
+     *
+     * @return string
+     */
+    public function getIdProperty()
+    {
+        return $this->idProperty;
+    }
+
+    /**
+     * Returns the Document ID of an object.
+     *
+     * @return mixed
+     */
     public function getId($object)
     {
         $id = $this->pProps[$this->idProperty];
