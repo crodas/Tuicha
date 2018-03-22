@@ -504,9 +504,10 @@ abstract class Filter
     }
 
     /**
-     * Normalizes PHP properties and mongo properties names
+     * Normalizes PHP and mongo property names
      *
-     * This function will rename all PHP properties to MongoDB property document.
+     * This function renames keys in an array. Those keys which matches PHP properties
+     * names will be renamed to their MongoDB document key name.
      *
      * @param Tuicha\Metadata   Document Metadata
      * @param array             Query to normalize
