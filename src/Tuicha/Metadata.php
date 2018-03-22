@@ -590,6 +590,11 @@ class Metadata
         return $this->idProperty;
     }
 
+    public function getProperties()
+    {
+        return $this->pProps;
+    }
+
     /**
      * Returns the Document ID of an object.
      *

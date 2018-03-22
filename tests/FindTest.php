@@ -129,6 +129,15 @@ class FindTest extends PHPUnit\Framework\TestCase
         $this->assertNotNull(Doc1::find(['bar' => 'xxx'])->first());
     }
 
+    /**
+     *  @dependsOn testFindOneWithResult
+     */
+    public function testQueryByPHPProperty()
+    {
+        $doc = Doc1::create(['bar' => 'lolxxx']);
+        $this->assertEquals($doc, Doc1::find(['id' => $doc->id])->first());
+    }
+
     public function testMany()
     {
         $x = Doc1::find();

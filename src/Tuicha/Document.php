@@ -191,7 +191,7 @@ trait Document
      */
     final static function create(Array $data)
     {
-        $document = new self;
+        $document = new static;
         foreach ($data as $key => $value) {
             $document->$key = $value;
         }

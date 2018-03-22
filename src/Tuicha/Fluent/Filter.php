@@ -36,6 +36,7 @@
 */
 namespace Tuicha\Fluent;
 
+use Tuicha\Metadata;
 use RuntimeException;
 
 abstract class Filter
@@ -500,5 +501,27 @@ abstract class Filter
         $this->filter = $filter;
 
         return $this;
+    }
+
+    /**
+     * Normalizes PHP properties and mongo properties names
+     *
+     * This function will rename all PHP properties to MongoDB property document.
+     *
+     * @param Tuicha\Metadata   Document Metadata
+     * @param array             Query to normalize
+     *
+     * @return array
+     */
+    public function normalize(Metadata $metadata, array $query)
+    {
+        foreach ($metadata->getProperties() as $property) {
+            if ($property['phpProp'] !== $property['mongoProp'] && array_key_exists($property['phpProp'], $query) && !array_key_exists($property['mongoProp'], $query)) {
+                $query[$property['mongoProp']] = $query[$property['phpProp']];
+                unset($query[$property['phpProp']]);
+            }
+        }
+
+        return $query;
     }
 }

@@ -61,9 +61,14 @@ class Query extends Cursor implements ArrayAccess
         $this->where($filter);
     }
 
+    public function getFilter()
+    {
+        return $this->normalize($this->metadata, $this->filter);
+    }
+
     protected function doQuery()
     {
-        $query = new Driver\Query($this->filter, [
+        $query = new Driver\Query($this->getFilter(), [
             'selector' => $this->fields,
         ]);
 
@@ -74,7 +79,7 @@ class Query extends Cursor implements ArrayAccess
 
     public function first()
     {
-        $query = new Driver\Query($this->filter, [
+        $query = new Driver\Query($this->getFilter(), [
             'selector' => $this->fields,
             'limit' => 1,
         ]);
