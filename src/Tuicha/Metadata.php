@@ -425,7 +425,7 @@ class Metadata
 
         foreach ($method->getAnnotations()->get($annotations) as $annotation) {
             $event = $events[$annotation->getName()];
-            $this->events[$event] = [
+            $this->events[$event][] = [
                 'method' => $method->getName(),
                 'is_public' => $method->isPublic(),
                 'args' => $annotation->getArgs(),
@@ -512,7 +512,7 @@ class Metadata
             return $this;
         }
 
-        foreach ($this->events as $event) {
+        foreach ($this->events[$eventName] as $event) {
             if ($event['is_public']) {
                 $object->{$event['method']}($event['args']);
             } else {
