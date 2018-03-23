@@ -133,7 +133,7 @@ class Metadata
 
         $reflection = new ReflectionClass($this->className);
         $this->file = $reflection->getFileName();
-        $this->hasTrait = in_array(__NAMESPACE__ . '\Document', $reflection->getTraitNames());
+        $this->hasTrait = in_array(Document::class, $reflection->getTraitNames());
 
         if ($reflection->getAnnotations()->has('persist,table,collection')) {
             $collection = $reflection->getAnnotations()->getOne('persist,table,collection')->getArg(0);
@@ -251,7 +251,6 @@ class Metadata
                 $value = [
                     '$ref' => $meta->getCollectionName(),
                     '$id'  => $meta->getId($value),
-                    '__$type' => strtolower(get_class($value)),
                 ];
                 return true;
             }
@@ -648,6 +647,14 @@ class Metadata
         } else {
             $object->__setState($data);
         }
+    }
+
+    public function makeReference($object)
+    {
+        return new Reference([
+            '$ref' => $this->getCollectionName(),
+            '$id'  => $this->getId($object),
+        ]);
     }
 
     /**

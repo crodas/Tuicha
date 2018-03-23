@@ -330,6 +330,18 @@ class Tuicha
         }
     }
 
+    public static function makeReference($object)
+    {
+        return Metadata::of($object)->makeReference($object);
+    }
+
+    /**
+     * Returns the class name associated with a collection name
+     *
+     * @param string $collection    Collection Name
+     *
+     * @return string|bool  Returns the class name or false.
+     */
     public static function getCollectionClass($collection)
     {
         $loader = Remember::wrap('tuicha-classes', function($classes) {
