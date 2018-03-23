@@ -51,7 +51,7 @@ use Notoj\ReflectionClass;
 use Notoj\ReflectionProperty;
 use Notoj\ReflectionMethod;
 use MongoDB\BSON\ObjectID;
-use MongoDB\BSON\Type;
+use MongoDB\BSON;
 
 /**
  * Metadata
@@ -213,6 +213,21 @@ class Metadata
     }
 
     /**
+     * Saves an object in MongoDB *if* they use the Document trait.
+     *
+     * @param object $object    Object to save
+     *
+     * @return object
+     */
+    protected function save($object)
+    {
+        if (is_callable([$object, 'save'])) {
+            $object->save();
+        }
+        return $object;
+    }
+
+    /**
      * Serializes a PHP value to store in MongoDB
      *
      *   1. Scalar values and MongoDB\BSON\Type objects are stored as is.
@@ -234,7 +249,12 @@ class Metadata
             return false;
         }
 
-        if ($value instanceof Type || is_scalar($value)) {
+        if ($value instanceof BSON\Serializable) {
+            $value = $this->save($value)->bsonSerialize();
+            return true;
+        }
+
+        if ($value instanceof BSON\Type || is_scalar($value)) {
             return true;
         }
 
@@ -247,11 +267,7 @@ class Metadata
             $class = strtolower(get_class($value));
             $meta  = Metadata::of($class);
             if (!empty($definition['is_reference'])) {
-                $value->save(); // make sure it's saved before creating a reference.
-                $value = [
-                    '$ref' => $meta->getCollectionName(),
-                    '$id'  => $meta->getId($value),
-                ];
+                $value = $meta->makeReference($this->save($value));
                 return true;
             }
 
@@ -295,6 +311,7 @@ class Metadata
             }
             $arguments[$id] = [$function, $args];
         }
+        var_dump($arguments);
 
         return $arguments;
     }
@@ -715,6 +732,30 @@ class Metadata
         return $document;
     }
 
+
+    protected function validate($key, $value, $definition)
+    {
+        if (empty($value) && $definition['required']) {
+            throw new UnexpectedValueException("Unexpected empty value for property $key");
+        } else if ($value && !empty($definition['validations'])) {
+            foreach ($definition['validations'] as $validation) {
+                $response = true;
+                if (is_array($validation[0])) {
+                    list($class, $method) = $validation[0];
+                    $response = $class::$method($value, $validation[1]);
+                } else if (is_callable($validation[0])) {
+                    $response = $validation[0]($value, $validation[1]);
+                }
+
+                if (!$response) {
+                    throw new UnexpectedValueException("Invalid value for $key ($value)");
+                }
+            }
+        }
+
+        return $value;
+    }
+
     /**
      * Returns a document which represents the current object state.
      *
@@ -729,6 +770,10 @@ class Metadata
         $keys = array_keys((array)$object);
         $keys = array_combine($keys, $keys);
         $array = [];
+
+        if ($object instanceof BSON\Type) {
+            return $object->bsonSerialize();
+        }
 
         foreach ($this->pProps as $key => $definition) {
             $mongo = $definition['mongoProp'];
@@ -749,26 +794,7 @@ class Metadata
                 continue;
             }
 
-            if ($validate) {
-                if (empty($value) && $definition['required']) {
-                    throw new UnexpectedValueException("Unexpected empty value for property $key");
-                } else if ($value && !empty($definition['validations'])) {
-                    foreach ($definition['validations'] as $validation) {
-                        if (is_array($validation[0])) {
-                            list($class, $method) = $validation[0];
-                            $response = $class::$method($value, $validation[1]);
-                        } else if (is_callable($validation[0])) {
-                            $response = $validation[0]($value, $validation[1]);
-                        }
-
-                        if (!$response) {
-                            throw new UnexpectedValueException("Invalid value for $key ($value)");
-                        }
-                    }
-                }
-            }
-
-            $array[$mongo] = $value;
+            $array[$mongo] = $validate ? $this->validate($key, $value, $definition) : $value;
         }
 
         foreach (get_object_vars($object) as $key => $value) {

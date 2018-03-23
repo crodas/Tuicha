@@ -49,7 +49,7 @@ class Validation
         if (!is_numeric($number)) {
             return false;
         }
-        $number = (int)$number;
+        $number = (int) $number;
         return true;
     }
 

@@ -37,13 +37,20 @@
 
 namespace Tuicha;
 
+use RuntimeException;
+use MongoDB\BSON\Serializable;
 use Tuicha;
 
-class Reference
+class Reference implements Serializable
 {
     protected $ref;
     protected $id;
     protected $document;
+
+    public function bsonSerialize()
+    {
+        return ['$ref' => $this->ref, '$id' => $this->id];
+    }
 
     public function __construct(array $reference)
     {
@@ -55,6 +62,9 @@ class Reference
     {
         if (!$this->document) {
             $this->document = Tuicha::find($this->ref, ['_id' => $this->id])->first();
+            if (!$this->document) {
+                throw new RuntimeException("Cannot find object {$this->id} in collection {$this->ref}");
+            }
         }
         return $this->document;
     }

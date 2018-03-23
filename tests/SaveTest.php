@@ -123,6 +123,31 @@ class TestSave extends PHPUnit\Framework\TestCase
         $this->assertEquals('lol', User::find(['id' => $doc->user->id])->first()->xyxy);
     }
 
+    /**
+     * @expectedException RuntimeException
+     */
+    public function testReferenceMissingDocument()
+    {
+        $x = new stdclass;
+        $x->id = 99;
+        Tuicha::makeReference($x)->getObject();
+    }
+
+    public function testReferenceSaveNoChanges()
+    {
+        $x = new stdclass;
+        $x->id = 99;
+        Tuicha::makeReference($x)->save();
+    }
+
+    public function testSaveSerializableInterface()
+    {
+        $x = new stdclass;
+        $x->id = 99;
+        $ref = Tuicha::makeReference($x);
+        $this->assertEquals($ref->bsonSerialize(), Metadata::of($ref)->toDocument($ref));
+    }
+
     public function testRawQuery()
     {
         foreach (Tuicha::find('users', [], [], 'default', true) as $user) {
