@@ -41,10 +41,12 @@ class Collection
 {
     protected $database;
     protected $collectionName;
+    protected $globalCollectionName;
 
     public function __construct($collectionName, Database $database)
     {
-        $this->collectionName = $database->getDbName() . '.' . $collectionName;
+        $this->collectionName = $collectionName;
+        $this->globalCollectionName = $database->getName() . '.' . $collectionName;
         $this->database       = $database;
     }
 
@@ -53,18 +55,18 @@ class Collection
         return $this->database;
     }
 
-    public function getName()
+    public function getName($globalName = true)
     {
-        return $this->collectionName;
+        return $globalName ? $this->globalCollectionName : $this->collectionName;
     }
 
     public function query($query)
     {
-        return $this->database->getConnection()->executeQuery($this->collectionName, $query);
+        return $this->database->getConnection()->executeQuery($this->globalCollectionName, $query);
     }
 
     public function execute($query)
     {
-        return $this->database->getConnection()->executeCommand($this->collectionName, $query);
+        return $this->database->getConnection()->executeCommand($this->globalCollectionName, $query);
     }
 }

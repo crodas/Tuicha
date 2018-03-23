@@ -47,7 +47,7 @@ class Database
         $this->connection = $connection;
     }
 
-    public function getDbName()
+    public function getName()
     {
         return $this->dbName;
     }

@@ -1,7 +1,7 @@
 <?php
 /*
   +---------------------------------------------------------------------------------+
-  | Copyright (c) 2017 César D. Rodas                                               |
+  | Copyright (c) 2018 César D. Rodas                                               |
   +---------------------------------------------------------------------------------+
   | Redistribution and use in source and binary forms, with or without              |
   | modification, are permitted provided that the following conditions are met:     |
@@ -49,21 +49,23 @@ class Query extends Cursor implements ArrayAccess
     protected $fields;
     protected $metadata;
     protected $namespace;
-    protected $class;
 
-    public function __construct($class, $filter, $fields)
+    public function __construct($metadata, $collection, $filter, $fields)
     {
-        $this->class      = $class;
-        $this->metadata   = Metadata::of($class);
+        $this->metadata   = $metadata;
         $this->filter     = [];
         $this->fields     = $fields;
-        $this->collection = $this->metadata->getCollection();
+        $this->collection = $collection;
         $this->where($filter);
     }
 
     public function getFilter()
     {
-        return $this->normalize($this->metadata, $this->filter);
+        if ($this->metadata) {
+            return $this->normalize($this->metadata, $this->filter);
+        }
+
+        return $this->filter;
     }
 
     protected function doQuery()
@@ -93,13 +95,13 @@ class Query extends Cursor implements ArrayAccess
             return NULL;
         }
 
-        return $this->metadata->newInstance($result[0]);
+        return $this->metadata ? $this->metadata->newInstance($result[0]) : $result[0];
     }
 
     public function count()
     {
         return Tuicha::command([
-            'count' => $this->metadata->GetCollectionName(),
+            'count' => $this->collection->getName(false),
             'query' => $this->filter,
         ], $this->collection)->toArray()[0]->n;
     }

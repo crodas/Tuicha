@@ -485,7 +485,7 @@ class Metadata
         static $cache = [];
         if (empty($cache[$this->className])) {
             $connection = Tuicha::getConnection('default');
-            $cache[$this->className] = new Collection($this->getCollectionName(), $connection);
+            $cache[$this->className] = new Collection($this->collectionName, $connection);
         }
 
         return $cache[$this->className];
@@ -494,18 +494,15 @@ class Metadata
     /**
      * Returns the collection name.
      *
-     * If $dbName is true, the database name is prepend to the collection name.
+     * If $globalName is true, the database name is prepend to the collection name.
      *
-     * @param bool $dbName Whether to include the database name or not.
+     * @param bool $globalName Whether to include the database name or not.
      *
      * @return string
      */
-    public function getCollectionName($dbName = false)
+    public function getCollectionName($globalName = false)
     {
-        if ($dbName) {
-            return $this->getCollection()->getName();
-        }
-        return $this->collectionName;
+        return $this->getCollection()->getName($globalName);
     }
 
     /**

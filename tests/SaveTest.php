@@ -104,5 +104,12 @@ class TestSave extends PHPUnit\Framework\TestCase
         $this->assertEquals(Tuicha\Reference::class, get_class($doc2->user));
         $this->assertEquals(User::class, get_class($doc2->user->getObject()));
     }
+
+    public function testRawQuery()
+    {
+        foreach (Tuicha::find('users', [], [], 'default', true) as $user) {
+            $this->assertTrue(is_array($user));
+        }
+    }
     
 }

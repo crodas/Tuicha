@@ -71,7 +71,8 @@ abstract class Cursor extends Filter implements Iterator
         $this->ensureQuery();
 
         if ($this->result->valid()) {
-            $this->current = $this->metadata->newInstance($this->result->current());
+            $document = $this->result->current();
+            $this->current = $this->metadata ? $this->metadata->newInstance($document) : $document;
             return true;
         }
 
@@ -91,7 +92,7 @@ abstract class Cursor extends Filter implements Iterator
 
     public function key()
     {
-        $id = $this->metadata->getId($this->current);
+        $id = $this->metadata ? $this->metadata->getId($this->current) : $this->current['_id'];
         if (version_compare(PHP_VERSION, '5.5', '<=')) {
             $id = (string)$id;
         }
