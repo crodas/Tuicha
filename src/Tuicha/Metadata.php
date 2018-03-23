@@ -222,12 +222,13 @@ class Metadata
      *   5. Any object is serialized with their own Metadata object (Metadata::serializeValue)
      *
      * @param string $propertyName  Property name
+     * @param array  $definition    Proprety definition
      * @param mixed  &$value        Value to serialize. It is by reference, it is OK to edit it in place.
      * @param boolean $validate     Whether or not to validate
      *
      * @return boolean TRUE if the property was serialized, FALSE if it should be ignored.
      */
-    protected function serializeValue($propertyName, &$value, $validate = true)
+    protected function serializeValue($propertyName, $definition, &$value, $validate = true)
     {
         if (substr($propertyName, 0, 2) === '__' || is_resource($value)) {
             return false;
@@ -244,8 +245,18 @@ class Metadata
 
         if (is_object($value)) {
             $class = strtolower(get_class($value));
-            $value = Metadata::of($value)->toDocument($value, $validate);
-            $definition = empty($this->pProps[$propertyName]) ? NULL : $this->pProps[$propertyName];
+            $meta  = Metadata::of($class);
+            if (!empty($definition['is_reference'])) {
+                $value->save(); // make sure it's saved before creating a reference.
+                $value = [
+                    '$ref' => $meta->getCollectionName(),
+                    '$id'  => $meta->getId($value),
+                    '__$type' => strtolower(get_class($value)),
+                ];
+                return true;
+            }
+
+            $value = $meta->toDocument($value, $validate);
             if (!$definition || empty($definition['type']['class']) || strtolower($definition['type']['class']) !== $class) {
                 // Tuicha must save the object class name to be able to populate it back.
                 $value['__$type'] = compact('class');
@@ -278,8 +289,8 @@ class Metadata
                 $function = $function->getName();
             }
 
-            if (is_callable([__NAMESPACE__ . '\Validation', $function])) {
-                $function = [__NAMESPACE__ . '\Validation', $function];
+            if (is_callable([Validation::class, $function])) {
+                $function = [Validation::class, $function];
             } else if (is_string($function) && strpos($function, "::") > 0) {
                 $function = explode("::", $function, 2);
             }
@@ -372,6 +383,7 @@ class Metadata
         $propData    = [
             'annotations' => [],
             'validations' => $this->getAnnotationArguments($annotations->get('validate')),
+            'is_reference' => $annotations->has('reference'),
             'required'    => $annotations->has('required'),
             'is_public'   => $property->isPublic(),
             'is_private'  => $property->isPrivate(),
@@ -556,14 +568,18 @@ class Metadata
         foreach ($document as $key => $value) {
             $prop = null;
             if (!empty($this->pProps[$key]) ||  !empty($this->mProps[$key])) {
-                $prop = !empty($this->pProps[$key]) ? $this->pProps[$key] : $this->mProps[$key];
+                $prop = !empty($this->mProps[$key]) ? $this->mProps[$key] : $this->pProps[$key];
                 $key  = $prop['phpProp'];
             }
 
-            if (!empty($prop['type'])) {
-                $value = $this->newInstanceByType($prop['type'], $value);
-            } else if (is_object($value) && !empty($value->{'__$type'})) {
-                $value = $this->newInstanceByType((array)$value->{'__$type'}, (array)$value);
+            if (!is_scalar($value)) {
+                if (!empty($value->{'$ref'}) && !empty($value->{'$id'})) {
+                    $value = new Reference((array)$value);
+                } else if (!empty($prop['type'])) {
+                    $value = $this->newInstanceByType($prop['type'], $value);
+                } else if (!empty($value->{'__$type'})) {
+                    $value = $this->newInstanceByType((array)$value->{'__$type'}, (array)$value);
+                }
             }
 
             if (!$prop || $prop['is_public']) {
@@ -725,7 +741,7 @@ class Metadata
                 $value = $property->getValue($object);
             }
 
-            if (!$this->serializeValue($key, $value, $validate)) {
+            if (!$this->serializeValue($key, $definition, $value, $validate)) {
                 continue;
             }
 
@@ -753,7 +769,7 @@ class Metadata
 
         foreach (get_object_vars($object) as $key => $value) {
             if (empty($this->pProps[$key]) && empty($this->mProps[$key])) {
-                if (!$this->serializeValue($key, $value, $validate)) {
+                if (!$this->serializeValue($key, [], $value, $validate)) {
                     continue;
                 }
                 $array[$key] = $value;

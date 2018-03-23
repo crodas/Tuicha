@@ -59,6 +59,7 @@ class Tuicha
 {
     protected static $connections = [];
     protected static $autoload = [];
+    protected static $dirs = [];
     protected static $autoload_loaded = false;
 
     /**
@@ -98,7 +99,7 @@ class Tuicha
 
     public static function find($collectionName, $query = [], $fields = [], $connection = 'default')
     {
-        $class = 'stdclass';
+        $class = self::getCollectionClass($collectionName) ?: 'stdclass';
         if (class_exists($collectionName)) {
             $class          = $collectionName;
             $metadata       = Metadata::of($collectionName);
@@ -307,11 +308,28 @@ class Tuicha
         });
 
         self::$autoload = array_merge($loader($directory), self::$autoload);
+        self::$dirs[]   = $directory;
 
         if (!self::$autoload_loaded) {
             spl_autoload_register(__CLASS__ . '::autoloader');
             self::$autoload_loaded = true;
         }
+    }
+
+    public static function getCollectionClass($collection)
+    {
+        $loader = Remember::wrap('tuicha-classes', function($classes) {
+            $collections = [];
+            foreach ($classes as $class) {
+                $collections[] = Metadata::of($class)->getCollectionName();
+            }
+
+            return array_combine($collections, $classes);
+        });
+
+        $collectionsClasses = $loader(array_keys(self::$autoload));
+
+        return empty($collectionsClasses[$collection]) ? false : $collectionsClasses[$collection];
     }
 
     /**

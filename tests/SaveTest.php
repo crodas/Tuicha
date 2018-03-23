@@ -70,7 +70,7 @@ class TestSave extends PHPUnit\Framework\TestCase
 
         $x->x = fopen(__FILE__, 'r'); // It should be ignored
         $doc  = Metadata::of($x)->toDocument($x);
-        $this->assertEquals(['_id'], array_keys($doc));
+        $this->assertEquals(['user', '_id'], array_keys($doc));
     }
 
     public function testSaveNestedObject()
@@ -85,10 +85,24 @@ class TestSave extends PHPUnit\Framework\TestCase
         $this->assertEquals('update', $update['command']);
         $this->assertEquals(['$set' => [
                 'x.1' => (object)['foo' => 'bar'],
+                'user' => null,
         ]], $update['document']);
 
         $x->save();
         $this->assertEquals($x->x, Doc1::find(['_id' => $x->id])->first()->x);
+    }
+
+    public function testReference()
+    {
+        $doc = new Doc1;
+        $doc->x = 1;
+        $doc->user = new User;
+        $doc->user->name = 'foo';
+        $doc->save();
+
+        $doc2 = Doc1::find(['id' => $doc->id])->first();
+        $this->assertEquals(Tuicha\Reference::class, get_class($doc2->user));
+        $this->assertEquals(User::class, get_class($doc2->user->getObject()));
     }
     
 }

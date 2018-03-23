@@ -6,4 +6,7 @@ namespace Docs;
 class Doc1 extends DocBase
 {
     public $x;
+
+    /** @reference */
+    public $user;
 }
