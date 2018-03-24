@@ -1,7 +1,7 @@
 <?php
 /*
   +---------------------------------------------------------------------------------+
-  | Copyright (c) 2017 César D. Rodas                                               |
+  | Copyright (c) 2018 César D. Rodas                                               |
   +---------------------------------------------------------------------------------+
   | Redistribution and use in source and binary forms, with or without              |
   | modification, are permitted provided that the following conditions are met:     |
@@ -37,25 +37,52 @@
 
 namespace Tuicha;
 
-class Validation
+use RuntimeException;
+use MongoDB\BSON\Serializable;
+use Tuicha;
+
+class Reference implements Serializable
 {
-    public static function is_email($email)
+    protected $ref;
+    protected $id;
+    protected $document;
+
+    public function bsonSerialize()
     {
-        return filter_var($email, FILTER_VALIDATE_EMAIL);
+        return ['$ref' => $this->ref, '$id' => $this->id];
     }
 
-    public static function is_integer(&$number)
+    public function __construct(array $reference)
     {
-        if (!is_numeric($number)) {
-            return false;
+        $this->ref = $reference['$ref'];
+        $this->id  = $reference['$id'];
+    }
+    
+    public function getObject()
+    {
+        if (!$this->document) {
+            $this->document = Tuicha::find($this->ref, ['_id' => $this->id])->first();
+            if (!$this->document) {
+                throw new RuntimeException("Cannot find object {$this->id} in collection {$this->ref}");
+            }
         }
-        $number = (int) $number;
-        return true;
+        return $this->document;
     }
 
-    public static function between($number, array $args)
+    public function save()
     {
-        return $number >= $args[0] && $number <= $args[1];
+        if ($this->document && is_callable([$this->document, 'save'])) {
+            return $this->document->save();
+        }
     }
 
+    public function __set($name, $value)
+    {
+        $this->getObject()->$name = $value;
+    }
+
+    public function __get($name)
+    {
+        return $this->getObject()->$name;
+    }
 }

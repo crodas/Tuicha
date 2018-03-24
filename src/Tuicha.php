@@ -1,7 +1,7 @@
 <?php
 /*
   +---------------------------------------------------------------------------------+
-  | Copyright (c) 2017 César D. Rodas                                               |
+  | Copyright (c) 2018 César D. Rodas                                               |
   +---------------------------------------------------------------------------------+
   | Redistribution and use in source and binary forms, with or without              |
   | modification, are permitted provided that the following conditions are met:     |
@@ -59,6 +59,7 @@ class Tuicha
 {
     protected static $connections = [];
     protected static $autoload = [];
+    protected static $dirs = [];
     protected static $autoload_loaded = false;
 
     /**
@@ -96,17 +97,31 @@ class Tuicha
         return self::$connections[$connectionName];
     }
 
-    public static function find($collectionName, $query = [], $fields = [], $connection = 'default')
+    /**
+     * Executes a find query
+     *
+     * This is meant for a low level API access only. It allows querying directly to a MongoDB collection.
+     *
+     * All queries though be going through the `find`, `where` or `newQuery` static methods provided by
+     * the Document trait.
+     *
+     * @param string $collectionName    Collection. It could also be a class name
+     * @param array  $query             Query. The query can be changed through the fluent API
+     * @param array  $fields            Fields name
+     * @param string $connection        Connection name
+     * @param bool   $raw               If TRUE the result will be returned as an array
+     *
+     * @return Tuicha\Query\Query
+     */
+    public static function find($collectionName, $query = [], $fields = [], $connection = 'default', $raw = false)
     {
-        $class = 'stdclass';
-        if (class_exists($collectionName)) {
-            $class          = $collectionName;
-            $metadata       = Metadata::of($collectionName);
-            $collectionName = $metadata->getCollectionName();
-            //$connection     = $metadata->getConnectionName();
-        }
+        $class = class_exists($collectionName) ? $collectionName : self::getCollectionClass($collectionName);
+        $class = $raw ? false : $class;
+        $metadata   = $class ? Metadata::of($class) : null;
+        $collection = $metadata ? $metadata->getCollection() : new Collection($collectionName, self::getConnection($connection));
 
-        return new Tuicha\Query\Query($class, $query, $fields);
+
+        return new Tuicha\Query\Query($metadata, $collection, $query, $fields);
     }
 
     /**
@@ -307,11 +322,40 @@ class Tuicha
         });
 
         self::$autoload = array_merge($loader($directory), self::$autoload);
+        self::$dirs[]   = $directory;
 
         if (!self::$autoload_loaded) {
             spl_autoload_register(__CLASS__ . '::autoloader');
             self::$autoload_loaded = true;
         }
+    }
+
+    public static function makeReference($object)
+    {
+        return Metadata::of($object)->makeReference($object);
+    }
+
+    /**
+     * Returns the class name associated with a collection name
+     *
+     * @param string $collection    Collection Name
+     *
+     * @return string|bool  Returns the class name or false.
+     */
+    public static function getCollectionClass($collection)
+    {
+        $loader = Remember::wrap('tuicha-classes', function($classes) {
+            $collections = [];
+            foreach ($classes as $class) {
+                $collections[] = Metadata::of($class)->getCollectionName();
+            }
+
+            return array_combine($collections, $classes);
+        });
+
+        $collectionsClasses = $loader(array_keys(self::$autoload));
+
+        return empty($collectionsClasses[$collection]) ? false : $collectionsClasses[$collection];
     }
 
     /**

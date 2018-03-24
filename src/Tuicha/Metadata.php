@@ -51,7 +51,7 @@ use Notoj\ReflectionClass;
 use Notoj\ReflectionProperty;
 use Notoj\ReflectionMethod;
 use MongoDB\BSON\ObjectID;
-use MongoDB\BSON\Type;
+use MongoDB\BSON;
 
 /**
  * Metadata
@@ -133,7 +133,7 @@ class Metadata
 
         $reflection = new ReflectionClass($this->className);
         $this->file = $reflection->getFileName();
-        $this->hasTrait = in_array(__NAMESPACE__ . '\Document', $reflection->getTraitNames());
+        $this->hasTrait = in_array(Document::class, $reflection->getTraitNames());
 
         if ($reflection->getAnnotations()->has('persist,table,collection')) {
             $collection = $reflection->getAnnotations()->getOne('persist,table,collection')->getArg(0);
@@ -213,6 +213,21 @@ class Metadata
     }
 
     /**
+     * Saves an object in MongoDB *if* they use the Document trait.
+     *
+     * @param object $object    Object to save
+     *
+     * @return object
+     */
+    protected function save($object)
+    {
+        if (is_callable([$object, 'save'])) {
+            $object->save();
+        }
+        return $object;
+    }
+
+    /**
      * Serializes a PHP value to store in MongoDB
      *
      *   1. Scalar values and MongoDB\BSON\Type objects are stored as is.
@@ -222,18 +237,24 @@ class Metadata
      *   5. Any object is serialized with their own Metadata object (Metadata::serializeValue)
      *
      * @param string $propertyName  Property name
+     * @param array  $definition    Proprety definition
      * @param mixed  &$value        Value to serialize. It is by reference, it is OK to edit it in place.
      * @param boolean $validate     Whether or not to validate
      *
      * @return boolean TRUE if the property was serialized, FALSE if it should be ignored.
      */
-    protected function serializeValue($propertyName, &$value, $validate = true)
+    protected function serializeValue($propertyName, $definition, &$value, $validate = true)
     {
         if (substr($propertyName, 0, 2) === '__' || is_resource($value)) {
             return false;
         }
 
-        if ($value instanceof Type || is_scalar($value)) {
+        if ($value instanceof BSON\Serializable) {
+            $value = $this->save($value)->bsonSerialize();
+            return true;
+        }
+
+        if ($value instanceof BSON\Type || is_scalar($value)) {
             return true;
         }
 
@@ -244,8 +265,13 @@ class Metadata
 
         if (is_object($value)) {
             $class = strtolower(get_class($value));
-            $value = Metadata::of($value)->toDocument($value, $validate);
-            $definition = empty($this->pProps[$propertyName]) ? NULL : $this->pProps[$propertyName];
+            $meta  = Metadata::of($class);
+            if (!empty($definition['is_reference'])) {
+                $value = $meta->makeReference($this->save($value));
+                return true;
+            }
+
+            $value = $meta->toDocument($value, $validate);
             if (!$definition || empty($definition['type']['class']) || strtolower($definition['type']['class']) !== $class) {
                 // Tuicha must save the object class name to be able to populate it back.
                 $value['__$type'] = compact('class');
@@ -278,8 +304,8 @@ class Metadata
                 $function = $function->getName();
             }
 
-            if (is_callable([__NAMESPACE__ . '\Validation', $function])) {
-                $function = [__NAMESPACE__ . '\Validation', $function];
+            if (is_callable([Validation::class, $function])) {
+                $function = [Validation::class, $function];
             } else if (is_string($function) && strpos($function, "::") > 0) {
                 $function = explode("::", $function, 2);
             }
@@ -372,6 +398,7 @@ class Metadata
         $propData    = [
             'annotations' => [],
             'validations' => $this->getAnnotationArguments($annotations->get('validate')),
+            'is_reference' => $annotations->has('reference'),
             'required'    => $annotations->has('required'),
             'is_public'   => $property->isPublic(),
             'is_private'  => $property->isPrivate(),
@@ -473,7 +500,7 @@ class Metadata
         static $cache = [];
         if (empty($cache[$this->className])) {
             $connection = Tuicha::getConnection('default');
-            $cache[$this->className] = new Collection($this->getCollectionName(), $connection);
+            $cache[$this->className] = new Collection($this->collectionName, $connection);
         }
 
         return $cache[$this->className];
@@ -482,18 +509,15 @@ class Metadata
     /**
      * Returns the collection name.
      *
-     * If $dbName is true, the database name is prepend to the collection name.
+     * If $globalName is true, the database name is prepend to the collection name.
      *
-     * @param bool $dbName Whether to include the database name or not.
+     * @param bool $globalName Whether to include the database name or not.
      *
      * @return string
      */
-    public function getCollectionName($dbName = false)
+    public function getCollectionName($globalName = false)
     {
-        if ($dbName) {
-            return $this->getCollection()->getName();
-        }
-        return $this->collectionName;
+        return $this->getCollection()->getName($globalName);
     }
 
     /**
@@ -556,14 +580,18 @@ class Metadata
         foreach ($document as $key => $value) {
             $prop = null;
             if (!empty($this->pProps[$key]) ||  !empty($this->mProps[$key])) {
-                $prop = !empty($this->pProps[$key]) ? $this->pProps[$key] : $this->mProps[$key];
+                $prop = !empty($this->mProps[$key]) ? $this->mProps[$key] : $this->pProps[$key];
                 $key  = $prop['phpProp'];
             }
 
-            if (!empty($prop['type'])) {
-                $value = $this->newInstanceByType($prop['type'], $value);
-            } else if (is_object($value) && !empty($value->{'__$type'})) {
-                $value = $this->newInstanceByType((array)$value->{'__$type'}, (array)$value);
+            if (!is_scalar($value)) {
+                if (!empty($value->{'$ref'}) && !empty($value->{'$id'})) {
+                    $value = new Reference((array)$value);
+                } else if (!empty($prop['type'])) {
+                    $value = $this->newInstanceByType($prop['type'], $value);
+                } else if (!empty($value->{'__$type'})) {
+                    $value = $this->newInstanceByType((array)$value->{'__$type'}, (array)$value);
+                }
             }
 
             if (!$prop || $prop['is_public']) {
@@ -637,6 +665,14 @@ class Metadata
         }
     }
 
+    public function makeReference($object)
+    {
+        return new Reference([
+            '$ref' => $this->getCollectionName(),
+            '$id'  => $this->getId($object),
+        ]);
+    }
+
     /**
      * Returns the last snapshoted state.
      *
@@ -695,6 +731,30 @@ class Metadata
         return $document;
     }
 
+
+    protected function validate($key, $value, $definition)
+    {
+        if (empty($value) && $definition['required']) {
+            throw new UnexpectedValueException("Unexpected empty value for property $key");
+        } else if ($value && !empty($definition['validations'])) {
+            foreach ($definition['validations'] as $validation) {
+                $response = true;
+                if (is_array($validation[0])) {
+                    list($class, $method) = $validation[0];
+                    $response = $class::$method($value, $validation[1]);
+                } else if (is_callable($validation[0])) {
+                    $response = $validation[0]($value, $validation[1]);
+                }
+
+                if (!$response) {
+                    throw new UnexpectedValueException("Invalid value for $key ($value)");
+                }
+            }
+        }
+
+        return $value;
+    }
+
     /**
      * Returns a document which represents the current object state.
      *
@@ -709,6 +769,10 @@ class Metadata
         $keys = array_keys((array)$object);
         $keys = array_combine($keys, $keys);
         $array = [];
+
+        if ($object instanceof BSON\Type) {
+            return $object->bsonSerialize();
+        }
 
         foreach ($this->pProps as $key => $definition) {
             $mongo = $definition['mongoProp'];
@@ -725,35 +789,16 @@ class Metadata
                 $value = $property->getValue($object);
             }
 
-            if (!$this->serializeValue($key, $value, $validate)) {
+            if (!$this->serializeValue($key, $definition, $value, $validate)) {
                 continue;
             }
 
-            if ($validate) {
-                if (empty($value) && $definition['required']) {
-                    throw new UnexpectedValueException("Unexpected empty value for property $key");
-                } else if ($value && !empty($definition['validations'])) {
-                    foreach ($definition['validations'] as $validation) {
-                        if (is_array($validation[0])) {
-                            list($class, $method) = $validation[0];
-                            $response = $class::$method($value, $validation[1]);
-                        } else if (is_callable($validation[0])) {
-                            $response = $validation[0]($value, $validation[1]);
-                        }
-
-                        if (!$response) {
-                            throw new UnexpectedValueException("Invalid value for $key ($value)");
-                        }
-                    }
-                }
-            }
-
-            $array[$mongo] = $value;
+            $array[$mongo] = $validate ? $this->validate($key, $value, $definition) : $value;
         }
 
         foreach (get_object_vars($object) as $key => $value) {
             if (empty($this->pProps[$key]) && empty($this->mProps[$key])) {
-                if (!$this->serializeValue($key, $value, $validate)) {
+                if (!$this->serializeValue($key, [], $value, $validate)) {
                     continue;
                 }
                 $array[$key] = $value;

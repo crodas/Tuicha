@@ -70,7 +70,7 @@ class TestSave extends PHPUnit\Framework\TestCase
 
         $x->x = fopen(__FILE__, 'r'); // It should be ignored
         $doc  = Metadata::of($x)->toDocument($x);
-        $this->assertEquals(['_id'], array_keys($doc));
+        $this->assertEquals(['user', '_id'], array_keys($doc));
     }
 
     public function testSaveNestedObject()
@@ -85,10 +85,26 @@ class TestSave extends PHPUnit\Framework\TestCase
         $this->assertEquals('update', $update['command']);
         $this->assertEquals(['$set' => [
                 'x.1' => (object)['foo' => 'bar'],
+                'user' => null,
         ]], $update['document']);
 
         $x->save();
         $this->assertEquals($x->x, Doc1::find(['_id' => $x->id])->first()->x);
+    }
+
+    public function testSaveSerializableInterface()
+    {
+        $x = new stdclass;
+        $x->id = 99;
+        $ref = Tuicha::makeReference($x);
+        $this->assertEquals($ref->bsonSerialize(), Metadata::of($ref)->toDocument($ref));
+    }
+
+    public function testRawQuery()
+    {
+        foreach (Tuicha::find('users', [], [], 'default', true) as $user) {
+            $this->assertTrue(is_array($user));
+        }
     }
     
 }

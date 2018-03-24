@@ -76,7 +76,8 @@ trait Document
      */
     final static function find($query = [], Array $fields = [])
     {
-        return new Query(static::class, $query, $fields);
+        $metadata = Metadata::of(static::class);
+        return new Query($metadata, $metadata->getCollection(), $query, $fields);
     }
 
     /**
@@ -86,7 +87,8 @@ trait Document
      */
     final static function newQuery()
     {
-        return new Query(static::class, [], []);
+        $metadata = Metadata::of(static::class);
+        return new Query($metadata, $metadata->getCollection(), [], []);
     }
 
     /**
@@ -135,7 +137,8 @@ trait Document
      */
     final static function count($query = [])
     {
-        $q = new Query(static::class, $query, []);
+        $metadata = Metadata::of(static::class);
+        $q = new Query($metadata, $metadata->getCollection(), $query, []);
         return $q->count();
     }
 
