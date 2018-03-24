@@ -58,6 +58,11 @@ class Reference implements Serializable
         $this->id  = $reference['$id'];
     }
     
+    /**
+     * Loads and return the real object.
+     *
+     * @return object
+     */
     public function getObject()
     {
         if (!$this->document) {
@@ -69,6 +74,13 @@ class Reference implements Serializable
         return $this->document;
     }
 
+    /**
+     * Persist all the changes
+     *
+     * If the object has not been loaded this function does nothing.
+     *
+     * @return mixed
+     */
     public function save()
     {
         if ($this->document && is_callable([$this->document, 'save'])) {
@@ -76,11 +88,17 @@ class Reference implements Serializable
         }
     }
 
+    /**
+     * Sets a property
+     */
     public function __set($name, $value)
     {
         $this->getObject()->$name = $value;
     }
 
+    /**
+     * Reads a property
+     */
     public function __get($name)
     {
         return $this->getObject()->$name;
