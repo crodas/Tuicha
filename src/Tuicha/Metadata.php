@@ -133,7 +133,7 @@ class Metadata
 
         $reflection = new ReflectionClass($this->className);
         $this->file = $reflection->getFileName();
-        $this->hasTrait = in_array(Document::class, $reflection->getTraitNames());
+        $this->hasTrait = in_array('Tuicha\Document', $reflection->getTraitNames());
 
         if ($reflection->getAnnotations()->has('persist,table,collection')) {
             $collection = $reflection->getAnnotations()->getOne('persist,table,collection')->getArg(0);
