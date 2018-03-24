@@ -213,6 +213,21 @@ class Metadata
     }
 
     /**
+     * Returns the metadata object associated to a MongoDB collection
+     *
+     * Returns the metadata object of the PHP class associated to a MongoDB collection
+     *
+     * @param string $collectionName
+     *
+     * @return Metadata
+     */
+    public static function ofCollection($collectionName)
+    {
+        $class = Tuicha::getCollectionClass($collectionName);
+        return $class ? self::of($class) : null;
+    }
+
+    /**
      * Saves an object in MongoDB *if* they use the Document trait.
      *
      * @param object $object    Object to save

@@ -18,6 +18,8 @@ class ReferenceTest extends PHPUnit\Framework\TestCase
         $this->assertEquals(Tuicha\Reference::class, get_class($doc2->user));
         $this->assertEquals(User::class, get_class($doc2->user->getObject()));
         $this->assertEquals($doc2->user->name, $doc2->user->getObject()->name);
+
+        $this->assertEquals($doc->user->t(), $doc2->user->t());
     }
 
     public function testReferenceUpdate()
@@ -48,10 +50,11 @@ class ReferenceTest extends PHPUnit\Framework\TestCase
 
     public function testReferenceSaveNoChanges()
     {
-        $x = new stdclass;
+        $x = new User;
         $x->id = 99;
-        Tuicha::makeReference($x)->save();
-        $this->assertTrue(true); // test that no exception is thrown
+        $ref = Tuicha::makeReference($x);
+        $ref->save();
+        $this->assertEquals(99, $ref->id);
     }
 
 }

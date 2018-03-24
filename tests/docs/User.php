@@ -13,4 +13,13 @@ class User {
      * @Validate(is_integer, @between(0, 99), "CustomValidator::isInt")
      */
     public $age;
+
+    public function t()
+    {
+        static $val;
+        if (!$val) {
+            $val = uniqid();
+        }
+        return $val;
+    }
 }

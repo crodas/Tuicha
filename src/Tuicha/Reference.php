@@ -41,11 +41,23 @@ use RuntimeException;
 use MongoDB\BSON\Serializable;
 use Tuicha;
 
+/**
+ * Reference class.
+ *
+ * This Reference class is the representation of a MongoDB reference.
+ *
+ * References in MongoDB has special keys (the collection name and the object
+ * ID). This implementation would loads the real object when needed, in such
+ * case this class is a Proxy class. All operations performed on it would
+ * be reflected in the referenced document.
+ *
+ */
 class Reference implements Serializable
 {
     protected $ref;
     protected $id;
     protected $document;
+    protected $properties;
 
     public function bsonSerialize()
     {
@@ -56,10 +68,14 @@ class Reference implements Serializable
     {
         $this->ref = $reference['$ref'];
         $this->id  = $reference['$id'];
+        $metadata  = Metadata::ofCollection($this->ref);
+        $this->properties = $metadata ? $metadata->getProperties() : [];
     }
-    
+
     /**
-     * Loads and return the real object.
+     * Loads and return the referenced object.
+     *
+     * If the document does not exists an exception will be thrown.
      *
      * @return object
      */
@@ -89,6 +105,19 @@ class Reference implements Serializable
     }
 
     /**
+     * Executes a function in the referenced document
+     *
+     * @param string $name  Function name
+     * @param array  $args  Arguments
+     *
+     * @return mixed
+     */
+    public function __call($name, $args)
+    {
+        return call_user_func_array([$this->getObject(), $name], $args);
+    }
+
+    /**
      * Sets a property
      */
     public function __set($name, $value)
@@ -101,6 +130,13 @@ class Reference implements Serializable
      */
     public function __get($name)
     {
+        $property= !empty($this->properties[$name]) ? $this->properties[$name] : null;
+        if ($property && $property['type'] === 'id') {
+            // there is no need to load the referenced object
+            // to return its ID
+            return $this->id;
+        }
+
         return $this->getObject()->$name;
     }
 }
