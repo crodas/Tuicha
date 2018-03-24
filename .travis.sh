@@ -31,14 +31,21 @@ then
     make -j 4
     sudo cp mongodb.so /etc/hhvm
     echo 'hhvm.dynamic_extensions[mongodb]=/etc/hhvm/mongodb.so' | sudo tee --append /etc/hhvm/php.ini > /dev/null
+    wget https://phar.phpunit.de/phpunit-5.7.phar -O /tmp/phpunit
     cd ..
 else
     phpenv config-rm xdebug.ini
     pecl install -f mongodb-${DRIVER_VERSION}
     php --ri mongodb
+    if [[ $TRAVIS_PHP_VERSION =~ 5.5 ]]
+        wget https://phar.phpunit.de/phpunit-4.8.phar -O /tmp/phpunit
+    elif [[ $TRAVIS_PHP_VERSION =~ 7.2 ]]
+        wget https://phar.phpunit.de/phpunit-7.phar -O /tmp/phpunit
+    else
+        wget https://phar.phpunit.de/phpunit-5.7.phar -O /tmp/phpunit
+    fi
 fi
 
-wget https://phar.phpunit.de/phpunit-5.7.phar -O /tmp/phpunit
 chmod +x /tmp/phpunit
 
 composer install --dev --no-interaction --prefer-source
