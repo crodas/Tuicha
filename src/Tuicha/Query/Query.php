@@ -102,7 +102,7 @@ class Query extends Cursor implements ArrayAccess
     {
         return Tuicha::command([
             'count' => $this->collection->getName(false),
-            'query' => $this->filter,
-        ], $this->collection)->toArray()[0]->n;
+            'query' => $this->getFilter(),
+        ])->toArray()[0]->n;
     }
 }

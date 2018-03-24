@@ -64,9 +64,4 @@ class Collection
     {
         return $this->database->getConnection()->executeQuery($this->globalCollectionName, $query);
     }
-
-    public function execute($query)
-    {
-        return $this->database->getConnection()->executeCommand($this->globalCollectionName, $query);
-    }
 }
