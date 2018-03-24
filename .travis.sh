@@ -38,8 +38,10 @@ else
     pecl install -f mongodb-${DRIVER_VERSION}
     php --ri mongodb
     if [[ $TRAVIS_PHP_VERSION =~ 5.5 ]]
+    then
         wget https://phar.phpunit.de/phpunit-4.8.phar -O /tmp/phpunit
     elif [[ $TRAVIS_PHP_VERSION =~ 7.2 ]]
+    then
         wget https://phar.phpunit.de/phpunit-7.phar -O /tmp/phpunit
     else
         wget https://phar.phpunit.de/phpunit-5.7.phar -O /tmp/phpunit

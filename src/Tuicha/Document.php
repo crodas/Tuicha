@@ -223,7 +223,7 @@ trait Document
      */
     public static function getKeyName()
     {
-        return Metadata::of(self::class)->getIdProperty();
+        return Metadata::of(static::class)->getIdProperty();
     }
 
     /**
