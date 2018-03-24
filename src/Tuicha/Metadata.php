@@ -311,7 +311,6 @@ class Metadata
             }
             $arguments[$id] = [$function, $args];
         }
-        var_dump($arguments);
 
         return $arguments;
     }
