@@ -51,7 +51,7 @@ class ReferenceTest extends PHPUnit\Framework\TestCase
         $x = new stdclass;
         $x->id = 99;
         Tuicha::makeReference($x)->save();
-        $this->assertTrue(true); // test that no assertion is thrown
+        $this->assertTrue(true); // test that no exception is thrown
     }
 
 }
