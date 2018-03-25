@@ -320,7 +320,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
     public function testWhereFieldName()
     {
         $q = Doc1::find()->where('foo')->is(1);
-        $this->AssertEquals(['foo' => 1], $q->getFilter());
+        $this->AssertEquals(['foo' => ['$in' => [1, '1']]], $q->getFilter());
     }
 
     /**

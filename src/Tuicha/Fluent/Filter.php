@@ -37,6 +37,7 @@
 namespace Tuicha\Fluent;
 
 use Tuicha\Metadata;
+use MongoDB\BSON\ObjectId;
 use RuntimeException;
 
 abstract class Filter
@@ -514,12 +515,39 @@ abstract class Filter
      *
      * @return array
      */
-    public function normalize(Metadata $metadata, array $query)
+    protected function normalize(Metadata $metadata, array $query)
     {
         foreach ($metadata->getProperties() as $property) {
             if ($property['phpProp'] !== $property['mongoProp'] && array_key_exists($property['phpProp'], $query) && !array_key_exists($property['mongoProp'], $query)) {
                 $query[$property['mongoProp']] = $query[$property['phpProp']];
                 unset($query[$property['phpProp']]);
+            }
+        }
+
+        return $this->normalizeDataTypes($query);
+    }
+
+    /**
+     * Normalize data types in queries
+     *
+     *  - Convert numbers into numbers and strings
+     *  - Convert strings that looks like ObjectID into ObjectID
+     *
+     * @param array $query
+     *
+     * @return array
+     */
+    protected function normalizeDataTypes(array $query)
+    {
+        foreach ($query as $key => $value) {
+            if (!is_scalar($value)) {
+                continue;
+            }
+
+            if (preg_match('/^[a-f0-9]{24}$/i', $value)) {
+                $query[$key] = ['$in' => [$value, new ObjectID($value)]];
+            } else if (is_numeric($value)) {
+                $query[$key] = ['$in' => [0+$value, (string)$value]];
             }
         }
 

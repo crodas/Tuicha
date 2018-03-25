@@ -226,6 +226,11 @@ trait Document
         return Metadata::of(static::class)->getIdProperty();
     }
 
+    public static function resolveRouteBinding($value)
+    {
+        return static::find(['_id' => $value])->first();
+    }
+
     /**
      * Creates indexes
      *
