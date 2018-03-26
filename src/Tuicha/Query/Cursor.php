@@ -62,8 +62,8 @@ abstract class Cursor extends Filter implements Iterator
 
     public function rewind()
     {
+        $this->queried = false;
         $this->ensureQuery();
-        $this->result->rewind();
     }
 
     public function valid()
