@@ -14,6 +14,9 @@ class User {
      */
     public $age;
 
+    /** @reference */
+    public $ref;
+
     public function t()
     {
         static $val;

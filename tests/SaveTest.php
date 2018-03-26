@@ -107,4 +107,21 @@ class TestSave extends PHPUnit\Framework\TestCase
         }
     }
     
+    public function testBugRecursiveInfiniteBug()
+    {
+        $x = new User;
+        $x->name = uniqid(true);
+        $x->email = uniqid(true) . '@foo.com';
+        $x->save();
+
+        $x->ref = new User;
+        $x->ref->name  = uniqid(true);
+        $x->ref->email = uniqid(true) . '@foo.com';
+        $x->ref->ref = $x;
+
+        $x->save();
+
+        $this->assertEquals($x->ref->id, User::find(['id' => $x->ref->id])->first()->id);
+        $this->assertEquals(Tuicha\Reference::class, get_class(User::find(['id' => $x->id])->first()->ref));
+    }
 }

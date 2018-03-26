@@ -61,6 +61,7 @@ class Tuicha
     protected static $autoload = [];
     protected static $dirs = [];
     protected static $autoload_loaded = false;
+    protected static $saving = [];
 
     /**
      * Adds a new connection,
@@ -238,13 +239,39 @@ class Tuicha
      */
     public static function save($object, $wait = true)
     {
-        $metadata = Metadata::of($object);
-        $command = $metadata->getSaveCommand($object, true);
-        if ($wait === true) {
-            $wait = new WriteConcern(WriteConcern::MAJORITY);
-        } else {
-            $wait = null;
+        $objectId = spl_object_hash($object);
+        if (!empty(self::$saving[$objectId])) {
+            return false;
         }
+
+        self::$saving[$objectId] = true;
+
+        try {
+            $ret = self::_save($object, $wait);
+        } catch (Exception $e) {
+            unset(self::$saving[$objectId]);
+            throw $e;
+        }
+
+        unset(self::$saving[$objectId]);
+        return $ret;
+    }
+
+    /**
+     * Internal implementation of the save() command.
+     *
+     * The public interface has a protection to avoid infinite recursion when saving objects
+     * with references. This raw function does not have this protection but rather the saving
+     * implementation.
+     *
+     * @param object $object
+     * @param bool $wait
+     */
+    private static function _save($object, $wait)
+    {
+        $metadata = Metadata::of($object);
+        $command  = $metadata->getSaveCommand($object, true);
+        $wait     = $wait ? new WriteConcern(WriteConcern::MAJORITY) : null;
 
         // There is nothing to create/update
         if (empty($command['document'])) {
