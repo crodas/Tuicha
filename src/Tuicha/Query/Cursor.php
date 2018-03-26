@@ -62,8 +62,14 @@ abstract class Cursor extends Filter implements Iterator
 
     public function rewind()
     {
-        $this->queried = false;
+        if ($this->current) {
+            // The cursor started iterating, MongoDB driver does not
+            // support rewinding after iterating, so rewind() in this
+            // case should issue a new query
+            $this->queried = false;
+        }
         $this->ensureQuery();
+        $this->result->rewind();
     }
 
     public function valid()
