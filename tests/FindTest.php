@@ -177,10 +177,16 @@ class FindTest extends PHPUnit\Framework\TestCase
         for ($i=0; $i < 100; ++$i) {
             $x = new Doc4;
             $x->foo = uniqid(true);
+            $x->xxx = __METHOD__;
+            $x->index = $i+1;
             $x->save();
         }
 
-        $this->assertTrue(Doc4::count() >= 100);
-        $this->assertEquals(10, count(iterator_to_array(Doc4::find()->limit(10))));
+        $this->assertEquals(100, Doc4::find(['xxx' => __METHOD__])->count());
+        $this->assertEquals(10, count(iterator_to_array(Doc4::find(['xxx' => __METHOD__])->limit(10))));
+
+        $this->assertEquals(1, Doc4::find(['xxx' => __METHOD__])->first()->index);
+        $this->assertEquals(34, Doc4::find(['xxx' => __METHOD__])->skip(33)->first()->index);
+        $this->assertEquals(44, Doc4::find(['xxx' => __METHOD__])->offset(43)->first()->index);
     }
 }

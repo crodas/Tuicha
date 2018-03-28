@@ -50,6 +50,7 @@ class Query extends Cursor implements ArrayAccess
     protected $metadata;
     protected $namespace;
     protected $limit;
+    protected $skip;
 
     public function __construct($metadata, $collection, $filter, $fields)
     {
@@ -69,14 +70,22 @@ class Query extends Cursor implements ArrayAccess
         return $this->filter;
     }
 
-    protected function doQuery()
+    protected function getQueryOptions()
     {
         $options = ['selector' => $this->fields];
-        if (is_numeric($this->limit) && $this->limit > 0) {
-            $options['limit'] = $this->limit;
+
+        foreach (['limit', 'skip'] as $property) {
+            if (is_numeric($this->$property) && $this->$property > 0) {
+                $options[$property] = $this->$property;
+            }
         }
 
-        $query = new Driver\Query($this->getFilter(), $options);
+        return $options;
+    }
+
+    protected function doQuery()
+    {
+        $query = new Driver\Query($this->getFilter(), $this->getQueryOptions());
 
         $cursor = $this->collection->query($query);
         $cursor->setTypeMap(['root' => 'array', 'document' => 'stdclass', 'array' => 'array']);
@@ -85,10 +94,9 @@ class Query extends Cursor implements ArrayAccess
 
     public function first()
     {
-        $query = new Driver\Query($this->getFilter(), [
-            'selector' => $this->fields,
-            'limit' => 1,
-        ]);
+        $options = $this->getQueryOptions();
+        $options['limit'] = 1;
+        $query = new Driver\Query($this->getFilter(), $options);
 
         $cursor = $this->collection->query($query);
         $cursor->setTypeMap(['root' => 'array', 'document' => 'stdclass', 'array' => 'array']);
@@ -100,6 +108,18 @@ class Query extends Cursor implements ArrayAccess
         }
 
         return $this->metadata ? $this->metadata->newInstance($result[0]) : $result[0];
+    }
+
+    public function skip($number)
+    {
+        $this->skip = (int)$number;
+        return $this;
+    }
+
+    public function offset($number)
+    {
+        $this->skip = (int)$number;
+        return $this;
     }
 
     public function limit($limit)
