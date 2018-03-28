@@ -163,5 +163,13 @@ class FindTest extends PHPUnit\Framework\TestCase
         }
     }
 
+    public function testIdString()
+    {
+        $x = new Doc4;
+        $x->foo = uniqid();
+        $x->save();
+
+        $this->assertEquals($x->foo, Doc4::find()->where('_id', (string)$x->getId())->first()->foo);
+    }
 
 }
