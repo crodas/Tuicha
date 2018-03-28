@@ -172,4 +172,15 @@ class FindTest extends PHPUnit\Framework\TestCase
         $this->assertEquals($x->foo, Doc4::find()->where('_id', (string)$x->getId())->first()->foo);
     }
 
+    public function testFindLimit()
+    {
+        for ($i=0; $i < 100; ++$i) {
+            $x = new Doc4;
+            $x->foo = uniqid(true);
+            $x->save();
+        }
+
+        $this->assertTrue(Doc4::count() >= 100);
+        $this->assertEquals(10, count(iterator_to_array(Doc4::find()->limit(10))));
+    }
 }

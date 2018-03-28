@@ -99,10 +99,7 @@ abstract class Cursor extends Filter implements Iterator
     public function key()
     {
         $id = $this->metadata ? $this->metadata->getId($this->current) : $this->current['_id'];
-        if (version_compare(PHP_VERSION, '5.5', '<=')) {
-            $id = (string)$id;
-        }
-        return $id;
+        return (string)$id;
     }
 
 }

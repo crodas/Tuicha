@@ -49,6 +49,7 @@ class Query extends Cursor implements ArrayAccess
     protected $fields;
     protected $metadata;
     protected $namespace;
+    protected $limit;
 
     public function __construct($metadata, $collection, $filter, $fields)
     {
@@ -70,9 +71,12 @@ class Query extends Cursor implements ArrayAccess
 
     protected function doQuery()
     {
-        $query = new Driver\Query($this->getFilter(), [
-            'selector' => $this->fields,
-        ]);
+        $options = ['selector' => $this->fields];
+        if (is_numeric($this->limit) && $this->limit > 0) {
+            $options['limit'] = $this->limit;
+        }
+
+        $query = new Driver\Query($this->getFilter(), $options);
 
         $cursor = $this->collection->query($query);
         $cursor->setTypeMap(['root' => 'array', 'document' => 'stdclass', 'array' => 'array']);
@@ -96,6 +100,12 @@ class Query extends Cursor implements ArrayAccess
         }
 
         return $this->metadata ? $this->metadata->newInstance($result[0]) : $result[0];
+    }
+
+    public function limit($limit)
+    {
+        $this->limit = (int)$limit;
+        return $this;
     }
 
     public function count()
