@@ -112,7 +112,18 @@ class TestSave extends PHPUnit\Framework\TestCase
             'x.1.xxx' => 'xxx',
             'user' => null,
         ]], $update['document']);
+        $y->save();
 
+        // unset a property in a nested object inside an array
+        unset($y->x[1]->xxx);
+        $update = Metadata::of($y)->getSaveCommand($y);
+        $this->assertEquals('update', $update['command']);
+        $this->assertEquals(['$set' => [
+            'user' => null,
+        ], '$unset' => [
+            'x.1.xxx' => 1,
+        ]], $update['document']);
+        $y->save();
     }
 
     public function testSaveSerializableInterface()

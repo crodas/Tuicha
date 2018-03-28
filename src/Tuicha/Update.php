@@ -39,32 +39,54 @@ namespace Tuicha;
 
 class Update
 {
+    /**
+     * Calculate differences between two objects
+     *
+     * If the two objects comparing are arrays, this function will calculate which elements
+     * needs to be added, replaced or removed.
+     *
+     * This function will be recursive in order to calculate the smallest changeset needed
+     * to persist the current object in the database.
+     *
+     * @param string $property
+     * @param array  $new
+     * @param array  $old
+     *
+     * @return array
+     */
     protected static function calculateDifferences($property, $new, $old)
     {
         $changes = [];
         if (Util::isArray($old, $new)) {
+            // We found an array.
             $diff = Util::arrayDiff($new, $old);
 
             if (!empty($diff['add'])) {
+                // Add more elements
                 $changes[] = ['$push', $property, ['$each' => array_values($diff['add'])]];
             }
 
             if (!empty($diff['update'])) {
+                // update elements
                 foreach ($diff['update'] as $id => $value) {
                     if (is_array($old[$id]) && is_array($new[$id])) {
+                        // Both elements are arrays. It means Tupa can be smarter and instead
+                        // of resaving the entire new element, replacing the old one, it can go
+                        // recursive and persist only the changes.
                         foreach (self::diff($new[$id], $old[$id]) as $operation => $_changes) {
                             foreach ($_changes as $_key => $_value) {
                                 $changes[] = [$operation, "{$property}.{$id}.{$_key}", $_value];
                             }
                         }
-                        $die = true;
                     } else {
+                        // It's safe to just replace the old element with the new element.
                         $changes[] = ['$set', $property . '.' . $id, $value];
                     }
                 }
             }
 
             if (!empty($diff['remove'])) {
+                // remove elements from the array
                 $changes[] = ['$pullAll', $property, array_values($diff['remove'])];
             }
 
@@ -73,6 +95,14 @@ class Update
         return $changes ?: [['$set', $property, $new]];
     }
 
+    /**
+     * Calculates the smallest operations to persit a change in the dabase
+     *
+     * @param array $new
+     * @param array $prevDocument
+     *
+     * @return array
+     */
     public static function diff(array $new, array $prevDocument)
     {
         $diff = [];
@@ -84,6 +114,12 @@ class Update
                     list($op, $property, $update) = $operation;
                     $diff[$op][$property] = $update;
                 }
+            }
+        }
+
+        foreach (array_keys($prevDocument) as $key) {
+            if (!array_key_exists($key, $new)) {
+                $diff['$unset'][$key] = 1;
             }
         }
 
