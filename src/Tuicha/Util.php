@@ -42,7 +42,7 @@ class Util
     public static function isArray()
     {
         foreach (func_get_args() as $argument) {
-            if (!is_array($argument) || array_values($argument) !== $argument) {
+            if (!is_array($argument) || array_keys($argument) !== range(0, count($argument)-1)) {
                 return false;
             }
         }

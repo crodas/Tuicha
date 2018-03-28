@@ -84,12 +84,35 @@ class TestSave extends PHPUnit\Framework\TestCase
         $update = Metadata::of($x)->getSaveCommand($x);
         $this->assertEquals('update', $update['command']);
         $this->assertEquals(['$set' => [
-                'x.1' => (object)['foo' => 'bar'],
-                'user' => null,
+            'x.1' => ['foo' => 'bar', '__$type' => ['class' => 'stdclass']],
+            'user' => null,
         ]], $update['document']);
 
         $x->save();
-        $this->assertEquals($x->x, Doc1::find(['_id' => $x->id])->first()->x);
+
+        // add a new property in a nested object inside an array
+        $x->x[1]->lol = 'lol';
+        $update = Metadata::of($x)->getSaveCommand($x);
+        $this->assertEquals('update', $update['command']);
+        $this->assertEquals(['$set' => [
+            'x.1.lol' => 'lol',
+            'user' => null,
+        ]], $update['document']);
+        $x->save();
+
+        $y = Doc1::find(['_id' => $x->id])->first();
+        unset($y->x[1]->{'__$type'});
+        $this->assertEquals($x->x, $y->x);
+
+        // add a new property in a nested object inside an array
+        $y->x[1]->xxx = 'xxx';
+        $update = Metadata::of($y)->getSaveCommand($y);
+        $this->assertEquals('update', $update['command']);
+        $this->assertEquals(['$set' => [
+            'x.1.xxx' => 'xxx',
+            'user' => null,
+        ]], $update['document']);
+
     }
 
     public function testSaveSerializableInterface()

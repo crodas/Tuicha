@@ -51,7 +51,16 @@ class Update
 
             if (!empty($diff['update'])) {
                 foreach ($diff['update'] as $id => $value) {
-                    $changes[] = ['$set', $property . '.' . $id, $value];
+                    if (is_array($old[$id]) && is_array($new[$id])) {
+                        foreach (self::diff($new[$id], $old[$id]) as $operation => $_changes) {
+                            foreach ($_changes as $_key => $_value) {
+                                $changes[] = [$operation, "{$property}.{$id}.{$_key}", $_value];
+                            }
+                        }
+                        $die = true;
+                    } else {
+                        $changes[] = ['$set', $property . '.' . $id, $value];
+                    }
                 }
             }
 

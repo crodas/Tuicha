@@ -278,6 +278,13 @@ class Metadata
             return true;
         }
 
+        if (is_array($value)) {
+            foreach ($value as $key => $val) {
+                $this->serializeValue($propertyName, $definition, $val, $validate);
+                $value[$key] = $val;
+            }
+        }
+
         if (is_object($value)) {
             $class = strtolower(get_class($value));
             $meta  = Metadata::of($class);
@@ -566,16 +573,38 @@ class Metadata
      *
      * @param array $type
      * @param array $document
+     * @param bool  $isNested   If this object is nested it shouldn't take its own snapshot
      *
      * @return object
      */
-    protected function newInstanceByType($type, $document)
+    protected function newInstanceByType($type, $document, $isNested = false)
     {
         if (!empty($type['class'])) {
-            return Metadata::of($type['class'])->newInstance($document);
+            return Metadata::of($type['class'])->newInstance($document, $isNested);
         }
 
         return $document;
+    }
+
+    protected function hydratate($prop, $value)
+    {
+        if (is_scalar($value)) {
+            return $value;
+        }
+
+        if (!empty($value->{'$ref'}) && !empty($value->{'$id'})) {
+            $value = new Reference((array)$value);
+        } else if (!empty($prop['type'])) {
+            $value = $this->newInstanceByType($prop['type'], $value, true);
+        } else if (!empty($value->{'__$type'})) {
+            $value = $this->newInstanceByType((array)$value->{'__$type'}, (array)$value, true);
+        } else if (is_array($value))  {
+            foreach ($value as $k => $v) {
+                $value[$k] = $this->hydratate($prop, $v);
+            }
+        }
+
+        return $value;
     }
 
     /**
@@ -585,10 +614,11 @@ class Metadata
      * return a PHP object. It uses the metadata if available.
      *
      * @param array $document
+     * @param bool  $isNested   If this object is nested it shouldn't take its own snapshot
      *
      * @return object
      */
-    public function newInstance(array $document)
+    public function newInstance(array $document, $isNested = false)
     {
         $class  = $this->className;
         $object = new $this->className;
@@ -599,15 +629,7 @@ class Metadata
                 $key  = $prop['phpProp'];
             }
 
-            if (!is_scalar($value)) {
-                if (!empty($value->{'$ref'}) && !empty($value->{'$id'})) {
-                    $value = new Reference((array)$value);
-                } else if (!empty($prop['type'])) {
-                    $value = $this->newInstanceByType($prop['type'], $value);
-                } else if (!empty($value->{'__$type'})) {
-                    $value = $this->newInstanceByType((array)$value->{'__$type'}, (array)$value);
-                }
-            }
+            $value = is_scalar($value) ? $value : $this->hydratate($prop, $value);
 
             if (!$prop || $prop['is_public']) {
                 $object->$key = $value;
@@ -618,7 +640,9 @@ class Metadata
             }
         }
 
-        $this->snapshot($object, $document);
+        if (!$isNested) {
+            $this->snapshot($object);
+        }
 
         return $object;
     }
@@ -666,9 +690,9 @@ class Metadata
      *
      * @return void
      */
-    public function snapshot($object, $data = null)
+    public function snapshot($object)
     {
-        $data = $data ?: $this->toDocument($object);
+        $data = $this->toDocument($object);
 
         if (!$this->hasTrait) {
             $object->__lastInstance = $data;
@@ -745,7 +769,6 @@ class Metadata
 
         return $document;
     }
-
 
     protected function validate($key, $value, $definition)
     {
