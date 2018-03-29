@@ -692,7 +692,7 @@ class Metadata
      */
     public function snapshot($object)
     {
-        $data = $this->toDocument($object);
+        $data = $this->toDocument($object, false, false);
 
         if (!$this->hasTrait) {
             $object->__lastInstance = $data;
