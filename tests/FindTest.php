@@ -189,4 +189,40 @@ class FindTest extends PHPUnit\Framework\TestCase
         $this->assertEquals(34, Doc4::find(['xxx' => __METHOD__])->skip(33)->first()->index);
         $this->assertEquals(44, Doc4::find(['xxx' => __METHOD__])->offset(43)->first()->index);
     }
+
+    public function testWhen()
+    {
+        $s = $this;
+        $q = uniqid('', true);
+        Doc4::find()->when($q, function($query, $v) use ($s, $q) {
+            $s->assertEquals($v, $q);
+        }, function($query) use ($s) {
+            $s->assertTrue(false);
+        });
+
+        Doc4::find()->when(null, function() use ($s) {
+            $s->assertTrue(false);
+        }, function() use ($s) {
+            $s->assertTrue(true);
+        });
+    }
+
+    public function testUnless()
+    {
+        $s = $this;
+        $q = uniqid('', true);
+
+
+        Doc4::find()->unless($q, function($query, $v) use ($s, $q) {
+            $s->assertTrue(false);
+        }, function($query, $v) use ($s, $q) {
+            $s->assertEquals($v, $q);
+        });
+
+        Doc4::find()->unless(null, function() use ($s) {
+            $s->assertTrue(true);
+        }, function() use ($s) {
+            $s->assertTrue(false);
+        });
+    }
 }

@@ -54,8 +54,6 @@ abstract class Filter
         '='  => '$q',
     ];
 
-
-
     /**
      * Returns the current filter array
      *
@@ -166,6 +164,42 @@ abstract class Filter
 
         $this->filter[$property] = $value;
 
+        return $this;
+    }
+
+    /**
+     * Apply the callback's query changes if the given "expr" is true.
+     *
+     * @param  mixed  $expr
+     * @param  callable  $callback
+     * @param  callable  $default
+     * @return mixed
+     */
+    public function when($expr, Callable $callback, Callable $default = null)
+    {
+        if ($expr) {
+            $callback($this, $expr);
+        } else if ($default) {
+            $default($this, $expr);
+        }
+        return $this;
+    }
+
+    /**
+     * Apply the callback's query changes if the given "expr" is false.
+     *
+     * @param  mixed  $expr
+     * @param  callable  $callback
+     * @param  callable  $default
+     * @return mixed
+     */
+    public function unless($expr, Callable $callback, Callable $default = null)
+    {
+        if (! $expr) {
+            $callback($this, $expr);
+        } else if ($default) {
+            $default($this, $expr);
+        }
         return $this;
     }
 
