@@ -46,9 +46,10 @@ use MongoDB\Driver\Command;
 class Query extends Cursor implements ArrayAccess
 {
     protected $collection;
-    protected $fields;
+    protected $projection;
     protected $metadata;
     protected $namespace;
+    protected $sort;
     protected $limit;
     protected $skip;
 
@@ -56,7 +57,7 @@ class Query extends Cursor implements ArrayAccess
     {
         $this->metadata   = $metadata;
         $this->filter     = [];
-        $this->fields     = $fields;
+        $this->projection = $fields;
         $this->collection = $collection;
         $this->where($filter);
     }
@@ -72,10 +73,10 @@ class Query extends Cursor implements ArrayAccess
 
     protected function getQueryOptions()
     {
-        $options = ['selector' => $this->fields];
+        $options = [];
 
-        foreach (['limit', 'skip'] as $property) {
-            if (is_numeric($this->$property) && $this->$property > 0) {
+        foreach (['limit', 'projection', 'skip', 'sort'] as $property) {
+            if ($this->$property !== null && $this->$property !== []) {
                 $options[$property] = $this->$property;
             }
         }
@@ -110,21 +111,44 @@ class Query extends Cursor implements ArrayAccess
         return $this->metadata ? $this->metadata->newInstance($result[0]) : $result[0];
     }
 
+    public function latest()
+    {
+        return $this->sort('_id', 'desc');
+    }
+
+    public function sort($property, $direction = 'asc')
+    {
+        $this->sort[$property] = $direction === 'asc' ? 1 : -1;
+        return $this;
+    }
+
+    public function orderBy($property, $direction = 'asc')
+    {
+        $this->sort[$property] = $direction === 'asc' ? 1 : -1;
+        return $this;
+    }
+
     public function skip($number)
     {
-        $this->skip = (int)$number;
+        if (is_numeric($number) && $number > 0) {
+            $this->skip = (int)$number;
+        }
         return $this;
     }
 
     public function offset($number)
     {
-        $this->skip = (int)$number;
+        if (is_numeric($number) && $number > 0) {
+            $this->skip = (int)$number;
+        }
         return $this;
     }
 
     public function limit($limit)
     {
-        $this->limit = (int)$limit;
+        if (is_numeric($limit) && $limit > 0) {
+            $this->limit = (int)$limit;
+        }
         return $this;
     }
 

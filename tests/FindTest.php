@@ -188,6 +188,27 @@ class FindTest extends PHPUnit\Framework\TestCase
         $this->assertEquals(1, Doc4::find(['xxx' => __METHOD__])->first()->index);
         $this->assertEquals(34, Doc4::find(['xxx' => __METHOD__])->skip(33)->first()->index);
         $this->assertEquals(44, Doc4::find(['xxx' => __METHOD__])->offset(43)->first()->index);
+
+        $this->assertEquals(100, Doc4::find(['xxx' => __METHOD__])->orderBy('index', 'desc')->first()->index);
+        $this->assertEquals(1, Doc4::find(['xxx' => __METHOD__])->sort('index')->first()->index);
+
+        $this->assertEquals(100, Doc4::find()->latest()->first()->index);
+    }
+
+    public function testRewindNoException()
+    {
+        $q = Doc4::find();
+        $total1 = 0;
+        $total2 = 0;
+        foreach ($q as $r) {
+            ++$total1;
+        }
+
+        foreach ($q as $r) {
+            ++$total2;
+        }
+
+        $this->assertEquals($total1, $total2);
     }
 
     public function testWhen()
