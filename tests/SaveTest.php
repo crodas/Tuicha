@@ -158,4 +158,30 @@ class TestSave extends PHPUnit\Framework\TestCase
         $this->assertEquals($x->ref->id, User::find(['id' => $x->ref->id])->first()->id);
         $this->assertEquals(Tuicha\Reference::class, get_class(User::find(['id' => $x->id])->first()->ref));
     }
+
+    /**
+     * @expectedException MongoDB\Driver\Exception\BulkWriteException
+     */
+    public function testSaveExceptionInvalidPropertyName()
+    {
+        $foo = new stdclass;
+        $foo->{'$foo'} = 1;
+        Tuicha::save($foo);
+    }
+
+    /**
+     * @expectedException MongoDB\Driver\Exception\BulkWriteException
+     */
+    public function testDuplicateValueOnUniqueIndex()
+    {
+        $x = new User;
+        $x->email = uniqid(true) . '@gmail.com';
+        $x->name = uniqid(true);
+        $x->save();
+
+        $y = new User;
+        $y->email = $x->email;
+        $y->name = uniqid(true);
+        $y->save();
+    }
 }

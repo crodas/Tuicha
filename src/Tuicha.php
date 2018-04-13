@@ -310,12 +310,10 @@ class Tuicha
             break;
         }
 
-        if (!empty($return->writeErrors)) {
-            var_dump($return->writeErrors);
-        }
-
         $metadata->triggerEvent($object, 'after_save')
             ->snapshot($object);
+
+        return $return;
     }
 
     /**
