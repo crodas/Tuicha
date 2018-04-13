@@ -278,37 +278,28 @@ class Tuicha
             return;
         }
 
+        $writer = new BulkWrite;
         switch ($command['command']) {
         case 'create':
-            $writer = new BulkWrite;
             $writer->insert($command['document']);
-
-            $return = $command['connection']->executeBulkWrite(
-                $command['namespace'],
-                $writer,
-                $wait
-            );
             break;
 
         case 'update':
-            $queries = [];
             foreach ($command['document'] as $op => $value) {
-                $queries[] = [
-                    'q' => $command['selector'],
-                    'multi' => false,
-                    'u' => [$op => $value],
-                    'upsert' => false
-                ];
+                $writer->update(
+                    $command['selector'],
+                    [$op => $value],
+                    ['multi' => false, 'upsert' => false]
+                );
             }
-
-            $return = static::command([
-                'update' => $command['collection'],
-                'updates' => $queries,
-                'ordered' => true,
-                'writeConcern' => $wait
-            ])->toArray()[0];
             break;
         }
+
+        $return = $command['connection']->executeBulkWrite(
+            $command['namespace'],
+            $writer,
+            $wait
+        );
 
         $metadata->triggerEvent($object, 'after_save')
             ->snapshot($object);
