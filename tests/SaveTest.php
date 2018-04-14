@@ -160,7 +160,7 @@ class TestSave extends PHPUnit\Framework\TestCase
     }
 
     /**
-     * @expectedException MongoDB\Driver\Exception\BulkWriteException
+     * @expectedException MongoDB\Driver\Exception\Exception
      */
     public function testSaveExceptionInvalidPropertyName()
     {
@@ -170,7 +170,7 @@ class TestSave extends PHPUnit\Framework\TestCase
     }
 
     /**
-     * @expectedException MongoDB\Driver\Exception\BulkWriteException
+     * @expectedException MongoDB\Driver\Exception\Exception
      */
     public function testDuplicateValueOnUniqueIndex()
     {
