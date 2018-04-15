@@ -362,6 +362,7 @@ class Tuicha
     {
         $loader = Remember::wrap('tuicha-classes', function($classes) {
             $collections = [];
+            $classes     = array_filter($classes, 'class_exists');
             foreach ($classes as $class) {
                 $collections[] = Metadata::of($class)->getCollectionName();
             }
