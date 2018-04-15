@@ -205,6 +205,15 @@ trait Document
     }
 
     /**
+     * Deletes all records from a collection
+     */
+    final static function truncate()
+    {
+        Tuicha::delete(static::class)
+            ->execute();
+    }
+
+    /**
      * Saves the changes in the current document/object.
      *
      * @param boolean $wait
