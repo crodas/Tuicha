@@ -822,7 +822,7 @@ class Metadata
         $keys = array_combine($keys, $keys);
         $array = [];
 
-        if ($object instanceof BSON\Type) {
+        if ($object instanceof BSON\Serializable) {
             return $object->bsonSerialize();
         }
 
