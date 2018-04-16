@@ -157,6 +157,13 @@ class TestSave extends PHPUnit\Framework\TestCase
 
         $this->assertEquals($x->ref->id, User::find(['id' => $x->ref->id])->first()->id);
         $this->assertEquals(Tuicha\Reference::class, get_class(User::find(['id' => $x->id])->first()->ref));
+
+        $user = User::find(['id' => $x->id])->first();
+        $this->assertEquals($x->ref->email, $user->ref->email);
+
+        $doc = new ReflectionProperty(Tuicha\Reference::class, 'document');
+        $doc->setAccessible(true);
+        $this->assertNull($doc->getValue($user->ref));
     }
 
     /**

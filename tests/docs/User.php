@@ -14,7 +14,7 @@ class User {
      */
     public $age;
 
-    /** @reference */
+    /** @reference(with=['email']) */
     public $ref;
 
     public function t()

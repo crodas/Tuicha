@@ -288,8 +288,12 @@ class Metadata
         if (is_object($value)) {
             $class = strtolower(get_class($value));
             $meta  = Metadata::of($class);
-            if (!empty($definition['is_reference'])) {
-                $value = $meta->makeReference($this->save($value));
+            if (array_key_exists('is_reference', $definition) && $definition['is_reference'] !== false) {
+                $with = [];
+                if (!empty($definition['is_reference']['with'])) {
+                    $with = (array) $definition['is_reference']['with'];
+                }
+                $value = $meta->makeReference($this->save($value), $with);
                 return true;
             }
 
@@ -420,7 +424,7 @@ class Metadata
         $propData    = [
             'annotations' => [],
             'validations' => $this->getAnnotationArguments($annotations->get('validate')),
-            'is_reference' => $annotations->has('reference'),
+            'is_reference' => $annotations->has('reference') ? $annotations->getOne('reference')->getArgs() : false,
             'required'    => $annotations->has('required'),
             'is_public'   => $property->isPublic(),
             'is_private'  => $property->isPrivate(),
@@ -704,12 +708,22 @@ class Metadata
         }
     }
 
-    public function makeReference($object)
+    public function makeReference($object, array $fields = [])
     {
-        return new Reference([
+        $reference = [
             '$ref' => $this->getCollectionName(),
             '$id'  => $this->getId($object),
-        ]);
+        ];
+
+        $fields = ['id', 'email'];
+        if (!empty($fields)) {
+            $reference['__cache'] = [];
+            foreach ($fields as $field) {
+                $reference['__cache'][$field] = $this->getPropertyValue($object, $field);
+            }
+        }
+
+        return new Reference($reference);
     }
 
     /**
@@ -856,6 +870,33 @@ class Metadata
         }
 
         return $array;
+    }
+
+    /**
+     * Returns a property value (private or public) from a document/object.
+     *
+     * @param object $object
+     * @param string $property
+     *
+     * @return mixed
+     */
+    public function getPropertyValue($object, $property)
+    {
+        $value = null;
+        if (!empty($this->pProps[$property])) {
+            $definition = $this->pProps[$property];
+            if ($definition['is_public']) {
+                $php   = $definition['phpProp'];
+                $value = $object->$php;
+            } else {
+                $property = new ReflectionProperty($this->className, $property);
+                $property->setAccessible(true);
+                $value = $property->getValue($object);
+            }
+        } else if (!empty($object->$property)) {
+            $value = $object->$property;
+        }
+        return $value;
     }
 
 }

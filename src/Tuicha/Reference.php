@@ -57,18 +57,24 @@ class Reference implements Serializable
     protected $ref;
     protected $id;
     protected $document;
+    protected $cache = [];
     protected $properties;
 
     public function bsonSerialize()
     {
-        return ['$ref' => $this->ref, '$id' => $this->id];
+        $reference = ['$ref' => $this->ref, '$id' => $this->id];
+        if (!empty($this->cache)) {
+            $reference['__cache'] = $this->cache;
+        }
+        return $reference;
     }
 
     public function __construct(array $reference)
     {
-        $this->ref = $reference['$ref'];
-        $this->id  = $reference['$id'];
-        $metadata  = Metadata::ofCollection($this->ref);
+        $this->ref   = $reference['$ref'];
+        $this->id    = $reference['$id'];
+        $this->cache = (array) (!empty($reference['__cache']) ? $reference['__cache'] : []);
+        $metadata    = Metadata::ofCollection($this->ref);
         $this->properties = $metadata ? $metadata->getProperties() : [];
     }
 
@@ -122,6 +128,9 @@ class Reference implements Serializable
      */
     public function __set($name, $value)
     {
+        if (array_key_exists($name, $this->cache)) {
+            $this->cache[$name] = $value;
+        }
         $this->getObject()->$name = $value;
     }
 
@@ -135,6 +144,10 @@ class Reference implements Serializable
             // there is no need to load the referenced object
             // to return its ID
             return $this->id;
+        }
+
+        if (!empty($this->cache[$name])) {
+            return $this->cache[$name];
         }
 
         return $this->getObject()->$name;
