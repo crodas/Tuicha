@@ -40,7 +40,7 @@ class TestSave extends PHPUnit\Framework\TestCase
 
         $fromDb = Doc1::find(['_id' => $x->id])->first();
         $this->assertEquals(get_class($x->f), get_class($fromDb->f));
-        unset($fromDb->f->{'__$type'});
+        unset($fromDb->f->{'__type'});
         unset($fromDb->f->__lastInstance);
         $this->assertEquals($x->f, $fromDb->f);
     }
@@ -84,7 +84,7 @@ class TestSave extends PHPUnit\Framework\TestCase
         $update = Metadata::of($x)->getSaveCommand($x);
         $this->assertEquals('update', $update['command']);
         $this->assertEquals(['$set' => [
-            'x.1' => ['foo' => 'bar', '__$type' => ['class' => 'stdclass']],
+            'x.1' => ['foo' => 'bar', '__type' => ['class' => 'stdclass']],
             'user' => null,
         ]], $update['document']);
 
@@ -101,7 +101,7 @@ class TestSave extends PHPUnit\Framework\TestCase
         $x->save();
 
         $y = Doc1::find(['_id' => $x->id])->first();
-        unset($y->x[1]->{'__$type'});
+        unset($y->x[1]->{'__type'});
         $this->assertEquals($x->x, $y->x);
 
         // add a new property in a nested object inside an array

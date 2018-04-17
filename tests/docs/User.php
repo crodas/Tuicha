@@ -1,6 +1,10 @@
 <?php
 
-class User {
+/**
+ * @singlecollection
+ */
+class User
+{
     use Tuicha\Document;
 
     /** @Required @Index(sparse=true) */
