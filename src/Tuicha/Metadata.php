@@ -135,17 +135,9 @@ class Metadata
 
         $reflection  = new ReflectionClass($this->className);
         $this->file  = $reflection->getFileName();
-        $collection  = null;
+        $collection  = $this->getCollectionNameInParentClasses($reflection);
         $annotations = $reflection->getAnnotations();
         $this->hasTrait = in_array(Document::class, $reflection->getTraitNames());
-
-        if ($reflection->getParentClass()) {
-            $parent = Metadata::of($reflection->getParentClass()->getName());
-            if ($parent->isSingleCollection()) {
-                $collection = $parent->getCollectionName();
-                $this->hasOwnCollection = false;
-            }
-        }
 
         if (!$collection && $annotations->has('persist,table,collection')) {
             $collection = $annotations->getOne('persist,table,collection')->getArg(0);
@@ -181,6 +173,28 @@ class Metadata
             $this->mProps['_id'] = $definition;
             $this->idProperty  = 'id';
         }
+    }
+
+    /**
+     * Checks in the parent classes if a collection name is defined already.
+     *
+     * This only has any effect if any ancestral class has a @SingleCollection annotation.
+     *
+     * @param ReflectionClass $reflection Current class reflection object.
+     *
+     * @return string
+     */
+    protected function getCollectionNameInParentClasses($reflection)
+    {
+        while ($reflection = $reflection->getParentClass()) {
+            $parent = Metadata::of($reflection->getName());
+            if ($parent->isSingleCollection()) {
+                $this->hasOwnCollection = false;
+                return $parent->getCollectionName();
+            }
+        }
+
+        return null;
     }
 
     /**

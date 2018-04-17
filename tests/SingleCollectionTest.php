@@ -8,6 +8,7 @@ class SingleCollectionTest extends PHPUnit\Framework\TestCase
     {
         $this->assertEquals('users', Metadata::of('Admin')->getCollectionName());
         $this->assertEquals('users', Metadata::of('User')->getCollectionName());
+        $this->assertEquals('users', Metadata::of('SuperAdmin')->getCollectionName());
     }
 
     public function testSaveAndFind()
