@@ -135,7 +135,7 @@ class Metadata
 
         $reflection  = new ReflectionClass($this->className);
         $this->file  = $reflection->getFileName();
-        $collection  = $this->getCollectionNameInParentClasses($reflection);
+        $collection  = $this->getCollectionNameFromParentClasses($reflection);
         $annotations = $reflection->getAnnotations();
         $this->hasTrait = in_array(Document::class, $reflection->getTraitNames());
 
@@ -184,7 +184,7 @@ class Metadata
      *
      * @return string
      */
-    protected function getCollectionNameInParentClasses($reflection)
+    protected function getCollectionNameFromParentClasses($reflection)
     {
         while ($reflection = $reflection->getParentClass()) {
             $parent = Metadata::of($reflection->getName());
