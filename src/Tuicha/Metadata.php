@@ -78,6 +78,8 @@ class Metadata
 
     protected $className;
     protected $collectionName;
+    protected $singleCollection = false;
+    protected $hasOwnCollection = true;
     protected $idProperty = null;
     protected $file;
     protected $hasTrait = false;
@@ -131,18 +133,21 @@ class Metadata
             throw new RuntimeException("Cannot find the class {$this->className}");
         }
 
-        $reflection = new ReflectionClass($this->className);
-        $this->file = $reflection->getFileName();
-        $this->hasTrait = in_array('Tuicha\Document', $reflection->getTraitNames());
+        $reflection  = new ReflectionClass($this->className);
+        $this->file  = $reflection->getFileName();
+        $collection  = $this->getCollectionNameFromParentClasses($reflection);
+        $annotations = $reflection->getAnnotations();
+        $this->hasTrait = in_array(Document::class, $reflection->getTraitNames());
 
-        if ($reflection->getAnnotations()->has('persist,table,collection')) {
-            $collection = $reflection->getAnnotations()->getOne('persist,table,collection')->getArg(0);
-        } else {
+        if (!$collection && $annotations->has('persist,table,collection')) {
+            $collection = $annotations->getOne('persist,table,collection')->getArg(0);
+        } else if (!$collection) {
             $class = explode("\\", $this->className);
             $collection = strtolower(Inflector::pluralize(end($class)));
         }
 
-        $this->collectionName = $collection;
+        $this->collectionName   = $collection;
+        $this->singleCollection = $annotations->has('singlecollection');
 
         foreach ($reflection->getProperties() as $property) {
             $this->processProperty($property);
@@ -168,6 +173,28 @@ class Metadata
             $this->mProps['_id'] = $definition;
             $this->idProperty  = 'id';
         }
+    }
+
+    /**
+     * Checks in the parent classes if a collection name is defined already.
+     *
+     * This only has any effect if any ancestral class has a @SingleCollection annotation.
+     *
+     * @param ReflectionClass $reflection Current class reflection object.
+     *
+     * @return string
+     */
+    protected function getCollectionNameFromParentClasses($reflection)
+    {
+        while ($reflection = $reflection->getParentClass()) {
+            $parent = Metadata::of($reflection->getName());
+            if ($parent->isSingleCollection()) {
+                $this->hasOwnCollection = false;
+                return $parent->getCollectionName();
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -300,7 +327,7 @@ class Metadata
             $value = $meta->toDocument($value, $validate);
             if (!$definition || empty($definition['type']['class']) || strtolower($definition['type']['class']) !== $class) {
                 // Tuicha must save the object class name to be able to populate it back.
-                $value['__$type'] = compact('class');
+                $value['__type'] = compact('class');
             }
         }
 
@@ -497,6 +524,42 @@ class Metadata
      */
 
     /**
+     * Returns the class name associated to this metadata object
+     *
+     * @return string
+     */
+    public function getClassName()
+    {
+        return $this->className;
+    }
+
+    /**
+     * Returns TRUE if this class is defined a SingleCollection
+     *
+     * If Single Collections is true, all child-classes will be stored in the same
+     * collection. Tupa will store the class name in the `__type` property.
+     *
+     * @return bool
+     */
+    public function isSingleCollection()
+    {
+        return $this->singleCollection;
+    }
+
+    /**
+     * Returns TRUE if the current class has their own collection
+     *
+     * Some classes may not have their own collection, this happens when a parent
+     * class, if any, has the `@SingleCollection` annotation.
+     *
+     * @return bool
+     */
+    public function hasOwnCollection()
+    {
+        return $this->hasOwnCollection;
+    }
+
+    /**
      * Returns all the indexes defined for this class (and its collection)
      *
      * @return array
@@ -600,8 +663,8 @@ class Metadata
             $value = new Reference((array)$value);
         } else if (!empty($prop['type'])) {
             $value = $this->newInstanceByType($prop['type'], $value, true);
-        } else if (!empty($value->{'__$type'})) {
-            $value = $this->newInstanceByType((array)$value->{'__$type'}, (array)$value, true);
+        } else if (!empty($value->__type)) {
+            $value = $this->newInstanceByType((array)$value->__type, (array)$value, true);
         } else if (is_array($value))  {
             foreach ($value as $k => $v) {
                 $value[$k] = $this->hydratate($prop, $v);
@@ -624,8 +687,8 @@ class Metadata
      */
     public function newInstance(array $document, $isNested = false)
     {
-        $class  = $this->className;
-        $object = new $this->className;
+        $class  = empty($document['__type']->class) ? $this->className : $document['__type']->class;
+        $object = new $class;
         foreach ($document as $key => $value) {
             $prop = null;
             if (!empty($this->pProps[$key]) ||  !empty($this->mProps[$key])) {
@@ -822,7 +885,7 @@ class Metadata
         $keys = array_combine($keys, $keys);
         $array = [];
 
-        if ($object instanceof BSON\Type) {
+        if ($object instanceof BSON\Serializable) {
             return $object->bsonSerialize();
         }
 
@@ -855,6 +918,10 @@ class Metadata
                 }
                 $array[$key] = $value;
             }
+        }
+
+        if (!$this->hasOwnCollection) {
+            $array['__type'] = ['class' => $this->className];
         }
 
         if (empty($array['_id']) && $generateId) {
