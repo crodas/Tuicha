@@ -238,7 +238,7 @@ class Metadata
                 $metadata->createIndexes();
 
                 // We must watch for any changes in the files
-                $args[] = $metadata->getFiles();
+                $args = array_merge($args, $metadata->getFiles());
 
                 return $metadata;
             });
