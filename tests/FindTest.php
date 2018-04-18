@@ -60,7 +60,7 @@ class FindTest extends PHPUnit\Framework\TestCase
 
     public function testCreateIndex()
     {
-        $this->assertTrue(User::createIndex() instanceof MongoDB\Driver\Cursor);
+        $this->assertTrue(User::createIndexes() instanceof MongoDB\Driver\Cursor);
     }
 
     public function testCountZero()

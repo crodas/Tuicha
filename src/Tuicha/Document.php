@@ -247,12 +247,9 @@ trait Document
      *
      * @return MongoDB\Driver\Cursor
      */
-    final public static function createIndex()
+    final public static function createIndexes()
     {
-        return Tuicha::command([
-            'createIndexes' => Metadata::of(static::class)->getCollectionName(),
-            'indexes' => Metadata::of(static::class)->getIndexes(),
-        ]);
+        return Metadata::of(static::class)->createIndexes();
     }
 
 }

@@ -226,13 +226,24 @@ class Metadata
                 //    - The file where the class is defined is added
                 //      to the file list. Any modification to this file
                 //      will invalidate the cached data.
-                $metadata = new self($args[0]);
-                $args[] = $metadata->getFile();
+                $className = $args[0];
+                $metadata  = new self($args[0]);
+
+                // The metadata has changed (or it is new), so it is fair
+                // to define all the indexes. MongoDB is smart enough to create
+                // or update all the needed indexes
+                $metadata->createIndexes();
+
+                // We must watch for any changes in the files
+                // TODO: It must all files even from parent classes, if any
+                $args[] = $metadata->getFiles();
+
                 return $metadata;
             });
         }
 
         if (empty(self::$instances[$className])) {
+            $createIndex = false;
             self::$instances[$className] = $loader($className);
         }
 
@@ -712,6 +723,22 @@ class Metadata
         }
 
         return $object;
+    }
+
+    /**
+     * Creates all the indexes defined in the class for this collection
+     *
+     * @return Cursor|null
+     */
+    public function createIndexes()
+    {
+        $indexes = $this->getIndexes();
+        if ($indexes) {
+            return Tuicha::command([
+                'createIndexes' => $this->getCollectionName(),
+                'indexes' => $this->getIndexes(),
+            ]);
+        }
     }
 
     /**
