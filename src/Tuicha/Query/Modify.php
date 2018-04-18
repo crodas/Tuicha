@@ -38,21 +38,24 @@ namespace Tuicha\Query;
 
 use Tuicha\Fluent\Filter;
 use Tuicha\Database;
+use Tuicha\Metadata;
 use ArrayAccess;
 
 abstract class Modify extends Filter implements ArrayAccess
 {
     protected $collection;
     protected $connection;
+    protected $metadata;
     protected $options = [
         'wait' => true,
         'multi' => true,
     ];
 
-    public function __construct($collection, Database $connection)
+    public function __construct($metadata, $collection, Database $connection)
     {
         $this->collection = $collection;
         $this->connection = $connection;
+        $this->metadata   = $metadata;
     }
 
     /**
@@ -70,7 +73,6 @@ abstract class Modify extends Filter implements ArrayAccess
         $this->options['multi'] = (bool) $multi;
         return $this;
     }
-
 
     /**
      * Tell the command to wait until the operation is confirmed by the

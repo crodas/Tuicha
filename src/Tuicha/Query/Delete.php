@@ -53,10 +53,15 @@ class Delete extends Modify
 
         $wConcern = new WriteConcern($options['wait'] ? WriteConcern::MAJORITY : '');
 
+        $query = $this->filter;
+        if ($this->metadata) {
+            $query = $this->normalize($this->metadata, $query);
+        }
+
         return Tuicha::command([
             'delete' => $this->collection,
             'deletes' => [
-                ['q' => (object)$this->filter, 'limit' => $options['multi'] ? 0 : 1, 'collation' => (object)[]],
+                ['q' => (object)$query, 'limit' => $options['multi'] ? 0 : 1, 'collation' => (object)[]],
             ],
             'ordered' => true,
             'writeConcern' => $wConcern,

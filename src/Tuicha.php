@@ -140,12 +140,13 @@ class Tuicha
      */
     public static function update($collectionName, $connection = 'default')
     {
+        $metadata = null;
         if (class_exists($collectionName)) {
             $metadata       = Metadata::of($collectionName);
             $collectionName = $metadata->getCollectionName();
             //$connection     = $metadata->getConnectionName();
         }
-        return new Update($collectionName, self::getConnection($connection));
+        return new Update($metadata, $collectionName, self::getConnection($connection));
     }
 
     /**
@@ -162,12 +163,13 @@ class Tuicha
      */
     public static function delete($collectionName, $connection = 'default')
     {
+        $metadata = null;
         if (class_exists($collectionName)) {
             $metadata       = Metadata::of($collectionName);
             $collectionName = $metadata->getCollectionName();
             //$connection     = $metadata->getConnectionName();
         }
-        return new Delete($collectionName, self::getConnection($connection));
+        return new Delete($metadata, $collectionName, self::getConnection($connection));
     }
 
     /**

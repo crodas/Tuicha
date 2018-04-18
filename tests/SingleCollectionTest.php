@@ -44,4 +44,15 @@ class SingleCollectionTest extends PHPUnit\Framework\TestCase
         $this->assertEquals(Admin::class, get_class(Admin::find()->first()));
     }
 
+    public function testDelete()
+    {
+        $user = new User;
+        $user->name = 'foo';
+        $user->email = uniqid(true) . '@test.com';
+        $user->save();
+
+        Admin::truncate();
+        $this->assertEquals(0, Admin::count());
+        $this->assertNotEquals(0, User::count());
+    }
 }
