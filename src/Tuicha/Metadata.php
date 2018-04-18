@@ -81,7 +81,7 @@ class Metadata
     protected $singleCollection = false;
     protected $hasOwnCollection = true;
     protected $idProperty = null;
-    protected $file;
+    protected $files;
     protected $hasTrait = false;
     protected $pProps  = [];
     protected $mProps  = [];
@@ -134,7 +134,7 @@ class Metadata
         }
 
         $reflection  = new ReflectionClass($this->className);
-        $this->file  = $reflection->getFileName();
+        $this->files = [$reflection->getFileName()];
         $collection  = $this->getCollectionNameFromParentClasses($reflection);
         $annotations = $reflection->getAnnotations();
         $this->hasTrait = in_array(Document::class, $reflection->getTraitNames());
@@ -188,11 +188,14 @@ class Metadata
     {
         while ($reflection = $reflection->getParentClass()) {
             $parent = Metadata::of($reflection->getName());
+            $this->files[] = $reflection->getFileName();
             if ($parent->isSingleCollection()) {
                 $this->hasOwnCollection = false;
                 return $parent->getCollectionName();
             }
         }
+
+        $this->files = array_unique($this->files);
 
         return null;
     }
@@ -235,7 +238,6 @@ class Metadata
                 $metadata->createIndexes();
 
                 // We must watch for any changes in the files
-                // TODO: It must all files even from parent classes, if any
                 $args[] = $metadata->getFiles();
 
                 return $metadata;
@@ -587,7 +589,17 @@ class Metadata
      */
     public function getFile()
     {
-        return $this->file;
+        return $this->files[0];
+    }
+
+    /**
+     * Returns all the files where the current (and their parent classes) are defined.
+     *
+     * @return array
+     */
+    public function getFiles()
+    {
+        return $this->files;
     }
 
     /**
