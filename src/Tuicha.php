@@ -108,13 +108,12 @@ class Tuicha
      *
      * @param string $collectionName    Collection. It could also be a class name
      * @param array  $query             Query. The query can be changed through the fluent API
-     * @param array  $fields            Fields name
      * @param string $connection        Connection name
      * @param bool   $raw               If TRUE the result will be returned as an array
      *
      * @return Tuicha\Query\Query
      */
-    public static function find($collectionName, $query = [], $fields = [], $connection = 'default', $raw = false)
+    public static function find($collectionName, $query = [], $connection = 'default', $raw = false)
     {
         $class = class_exists($collectionName) ? $collectionName : self::getCollectionClass($collectionName);
         $class = $raw ? false : $class;
@@ -122,7 +121,7 @@ class Tuicha
         $collection = $metadata ? $metadata->getCollection() : new Collection($collectionName, self::getConnection($connection));
 
 
-        return new Tuicha\Query\Query($metadata, $collection, $query, $fields);
+        return new Tuicha\Query\Query($metadata, $collection, [$query]);
     }
 
     /**

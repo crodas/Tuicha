@@ -461,7 +461,7 @@ class Metadata
             $this->idProperty = $phpName;
         }
 
-        $propData    = [
+        $propData = [
             'annotations' => [],
             'validations' => $this->getAnnotationArguments($annotations->get('validate')),
             'is_reference' => $annotations->has('reference') ? $annotations->getOne('reference')->getArgs() : false,

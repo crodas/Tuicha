@@ -69,15 +69,23 @@ trait Document
     /**
      * Finds documents in a collection.
      *
-     * @param array|callable $query
-     * @param array $fields
+     * @return Tuicha\Query
+     */
+    final static function find()
+    {
+        $metadata = Metadata::of(static::class);
+        return new Query($metadata, $metadata->getCollection(), func_get_args());
+    }
+
+    /**
+     * Finds documents in a collection.
      *
      * @return Tuicha\Query
      */
-    final static function find($query = [], Array $fields = [])
+    final static function where()
     {
         $metadata = Metadata::of(static::class);
-        return new Query($metadata, $metadata->getCollection(), $query, $fields);
+        return new Query($metadata, $metadata->getCollection(), func_get_args());
     }
 
     /**
@@ -88,7 +96,7 @@ trait Document
     final static function newQuery()
     {
         $metadata = Metadata::of(static::class);
-        return new Query($metadata, $metadata->getCollection(), [], []);
+        return new Query($metadata, $metadata->getCollection(), []);
     }
 
     /**

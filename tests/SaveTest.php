@@ -136,7 +136,7 @@ class TestSave extends PHPUnit\Framework\TestCase
 
     public function testRawQuery()
     {
-        foreach (Tuicha::find('users', [], [], 'default', true) as $user) {
+        foreach (Tuicha::find('users', [], 'default', true) as $user) {
             $this->assertTrue(is_array($user));
         }
     }

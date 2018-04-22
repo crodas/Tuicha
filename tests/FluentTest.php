@@ -330,5 +330,37 @@ class FluentTest extends PHPUnit\Framework\TestCase
     {
         Doc1::find()->where();
     }
+
+    public function testFindWithWhere()
+    {
+        $this->assertEquals(
+            ['foo' => 'bar'],
+            Doc1::where('foo', 'bar')->getFilter()
+        );
+    }
+
+    public function testFindWithFind()
+    {
+        $this->assertEquals(
+            ['foo' => 'bar'],
+            Doc1::find('foo', 'bar')->getFilter()
+        );
+    }
+
+    public function testFindWithEmptyInit()
+    {
+        $this->assertEquals(
+            ['foo' => 'bar'],
+            Doc1::find()->where('foo', 'bar')->getFilter()
+        );
+    }
+
+    public function testFindWithGte()
+    {
+        $this->assertEquals(
+            ['foo' => ['$gte' => 'bar']],
+            Doc1::where('foo', '>=', 'bar')->getFilter()
+        );
+    }
 }
 

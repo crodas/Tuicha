@@ -53,13 +53,17 @@ class Query extends Cursor implements ArrayAccess
     protected $limit;
     protected $skip;
 
-    public function __construct($metadata, $collection, $filter, $fields)
+    public function __construct($metadata, $collection, array $filters)
     {
         $this->metadata   = $metadata;
         $this->filter     = [];
-        $this->projection = $fields;
+        $this->projection = [];
         $this->collection = $collection;
-        $this->where($filter);
+        if (count($filters) === 1 && !empty($fitlers[0])) {
+            $this->where($filters[0]);
+        } else if (!empty($filters)) {
+            call_user_func_array([$this, 'where'], $filters);
+        }
     }
 
     public function getFilter()
