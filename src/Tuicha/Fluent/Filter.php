@@ -146,17 +146,18 @@ abstract class Filter
             break;
         }
 
-        if (!empty($this->filter[$property]) && is_array($this->filter[$property])) {
-           $this->filter[$property][$op] = $value;
-           return $this;
-        }
-
         $op = strtolower($op);
         if (!empty(self::$math[$op])) {
             $op = self::$math[$op];
         } else if ($op[0] !== '$') {
             $op = '$' . $op;
         }
+
+        if (!empty($this->filter[$property]) && is_array($this->filter[$property])) {
+           $this->filter[$property][$op] = $value;
+           return $this;
+        }
+
 
         if ($op != '$eq') {
             $value = [$op => $value];
