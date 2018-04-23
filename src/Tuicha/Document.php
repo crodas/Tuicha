@@ -78,6 +78,18 @@ trait Document
     }
 
     /**
+     * Find a document by a query or throw an exception.
+     *
+     * @return object
+     */
+    final static function findOrFail()
+    {
+        $metadata = Metadata::of(static::class);
+        $query = new Query($metadata, $metadata->getCollection(), func_get_args());
+        return $query->firstOrFail();
+    }
+
+    /**
      * Finds documents in a collection.
      *
      * @return Tuicha\Query

@@ -254,4 +254,12 @@ class FindTest extends PHPUnit\Framework\TestCase
     {
         Doc4::find('id', uniqid())->firstOrFail();
     }
+
+    /**
+     * @expectedException UnexpectedValueException
+     */
+    public function testNotFoundGlobalInterface()
+    {
+        Doc4::findOrFail(uniqid());
+    }
 }

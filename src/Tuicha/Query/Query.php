@@ -42,6 +42,7 @@ use ArrayAccess;
 use IteratorIterator;
 use MongoDB\Driver;
 use MongoDB\Driver\Command;
+use MongoDB\BSON\ObjectId;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class Query extends Cursor implements ArrayAccess
@@ -60,8 +61,13 @@ class Query extends Cursor implements ArrayAccess
         $this->filter     = [];
         $this->projection = [];
         $this->collection = $collection;
-        if (count($filters) === 1 && !empty($fitlers[0])) {
-            $this->where($filters[0]);
+        if (count($filters) === 1 && !empty($filters[0])) {
+            $value = $filters[0];
+            if (is_scalar($value) || $value instanceof ObjectId) {
+                $this->where('_id', $value);
+            } else {
+                $this->where($value);
+            }
         } else if (!empty($filters)) {
             call_user_func_array([$this, 'where'], $filters);
         }
