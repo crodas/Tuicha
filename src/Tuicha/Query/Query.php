@@ -43,7 +43,6 @@ use IteratorIterator;
 use MongoDB\Driver;
 use MongoDB\Driver\Command;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use UnexpectedValueException;
 
 class Query extends Cursor implements ArrayAccess
 {
@@ -121,7 +120,7 @@ class Query extends Cursor implements ArrayAccess
     {
         $doc = $this->first();
         if (!$doc) {
-            $exception = class_exists(ModelNotFoundException::class) ? ModelNotFoundException::class : UnexpectedValueException::class;
+            $exception = class_exists(ModelNotFoundException::class) ? ModelNotFoundException::class : 'UnexpectedValueException';
             throw new $exception("Document not found");
         }
 
