@@ -246,4 +246,12 @@ class FindTest extends PHPUnit\Framework\TestCase
             $s->assertTrue(false);
         });
     }
+
+    /**
+     * @expectedException UnexpectedValueException
+     */
+    public function testNotFound()
+    {
+        Doc4::find('id', uniqid())->firstOrFail();
+    }
 }

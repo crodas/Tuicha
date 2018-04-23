@@ -42,6 +42,8 @@ use ArrayAccess;
 use IteratorIterator;
 use MongoDB\Driver;
 use MongoDB\Driver\Command;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use UnexpectedValueException;
 
 class Query extends Cursor implements ArrayAccess
 {
@@ -113,6 +115,17 @@ class Query extends Cursor implements ArrayAccess
         }
 
         return $this->metadata ? $this->metadata->newInstance($result[0]) : $result[0];
+    }
+
+    public function firstOrFail()
+    {
+        $doc = $this->first();
+        if (!$doc) {
+            $exception = class_exists(ModelNotFoundException::class) ? ModelNotFoundException::class : UnexpectedValueException::class;
+            throw new $exception("Document not found");
+        }
+
+        return $doc;
     }
 
     public function latest()
