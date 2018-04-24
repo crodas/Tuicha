@@ -263,11 +263,18 @@ class FindTest extends PHPUnit\Framework\TestCase
         Doc4::findOrFail(uniqid());
     }
 
-    public function testScopeFind()
+    public function testLocalScope()
     {
         $q = User::find()->teens();
         $this->assertEquals([
             'age' => ['$gt' => 18, '$lt' => 30]
         ], $q->getFilter());
+    }
+
+    public function testLocalScopeStaticInterface()
+    {
+        $this->assertEquals([
+            'age' => ['$gt' => 18, '$lt' => 30]
+        ], User::teens()->getFilter());
     }
 }

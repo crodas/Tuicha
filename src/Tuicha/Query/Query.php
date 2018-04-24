@@ -56,7 +56,7 @@ class Query extends Cursor implements ArrayAccess
     protected $limit;
     protected $skip;
 
-    public function __construct($metadata, $collection, array $filters)
+    public function __construct($metadata, $collection, array $filters = [])
     {
         $this->metadata   = $metadata;
         $this->scopes     = $metadata ? $metadata->getScopes() : [];

@@ -163,6 +163,23 @@ trait Document
     }
 
     /**
+     * Catches static non-defined functions calls
+     *
+     * These functions are forwarded to the Query object.
+     *
+     * @param string $function
+     * @param array  $args
+     *
+     * @return mixed
+     */
+    final static function __callStatic($function, array $args)
+    {
+        $metadata = Metadata::of(static::class);
+        $q = new Query($metadata, $metadata->getCollection());
+        return call_user_func_array([$q, $function], $args);
+    }
+
+    /**
      * Updates documents matching a selector.
      *
      * @param array|callable $where
