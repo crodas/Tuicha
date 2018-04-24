@@ -277,4 +277,11 @@ class FindTest extends PHPUnit\Framework\TestCase
             'age' => ['$gt' => 18, '$lt' => 30]
         ], User::teens()->getFilter());
     }
+
+    public function testLocalScopeWithArgument()
+    {
+        return $this->assertEquals([
+            'type' => 'foo',
+        ], User::ofType('foo')->getFilter());
+    }
 }

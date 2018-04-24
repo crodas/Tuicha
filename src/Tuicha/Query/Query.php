@@ -79,7 +79,7 @@ class Query extends Cursor implements ArrayAccess
     {
         $function = strtolower($function);
         if (!empty($this->scopes[$function])) {
-            $args[] = $this;
+            array_unshift($args, $this);
             $method = [$this->metadata->getInstance(), $this->scopes[$function][0]];
             return call_user_func_array($method, $args);
         }
