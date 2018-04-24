@@ -29,4 +29,15 @@ class User
         }
         return $val;
     }
+
+    public function scopeTeens($query)
+    {
+        return $query->where('age', '>', 18)
+            ->where('age', '<', 30);
+    }
+
+    public function scopeOfType($query, $type)
+    {
+        return $query->where('type', $type);
+    }
 }

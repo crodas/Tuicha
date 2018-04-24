@@ -77,6 +77,8 @@ class Metadata
     ];
 
     protected $className;
+    protected $instance;
+    protected $scopes = [];
     protected $collectionName;
     protected $singleCollection = false;
     protected $hasOwnCollection = true;
@@ -139,6 +141,8 @@ class Metadata
         $annotations = $reflection->getAnnotations();
         $this->hasTrait = in_array(Document::class, $reflection->getTraitNames());
 
+        $this->readScopes($reflection);
+
         if (!$collection && $annotations->has('persist,table,collection')) {
             $collection = $annotations->getOne('persist,table,collection')->getArg(0);
         } else if (!$collection) {
@@ -172,6 +176,35 @@ class Metadata
             $this->pProps['id'] = $definition;
             $this->mProps['_id'] = $definition;
             $this->idProperty  = 'id';
+        }
+    }
+
+    /**
+     * Read all the local scopes defined in a class.
+     *
+     * This function will read all scope functions defined in the current class.
+     *
+     * @link https://laravel.com/docs/5.6/eloquent#local-scope
+     * @link https://laravel.com/docs/5.6/eloquent#local-scopess
+     *
+     * @param ReflectionClass $reflection
+     */
+    protected function readScopes(ReflectionClass $reflection)
+    {
+        $this->instance = $reflection->isAbstract() ? null : $reflection->newInstanceWithoutConstructor();
+        $this->scopes   = [];
+        if (!$this->instance) {
+            return;
+        }
+
+        foreach ($reflection->getMethods() as $method) {
+            if (!preg_match('/^scope(.+)/i', $method->getName(), $matches)) {
+                continue;
+            }
+            $this->scopes[strtolower($matches[1])] = [
+                $method->getName(),
+                count($method->getParameters())-1,
+            ];
         }
     }
 
@@ -600,6 +633,29 @@ class Metadata
     public function getFiles()
     {
         return $this->files;
+    }
+
+    /**
+     * Returns all the scopes defined in the current class
+     *
+     * @return array
+     */
+    public function getScopes()
+    {
+        return $this->scopes;
+    }
+
+    /**
+     * Returns an instance of this class
+     *
+     * This instance was constructed without calling the constructor and it is quite useful
+     * for calling non-static methods as static. It is currently used in the scopes
+     *
+     * @return object
+     */
+    public function getInstance()
+    {
+        return $this->instance;
     }
 
     /**

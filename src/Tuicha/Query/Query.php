@@ -50,14 +50,16 @@ class Query extends Cursor implements ArrayAccess
     protected $collection;
     protected $projection;
     protected $metadata;
+    protected $scopes;
     protected $namespace;
     protected $sort;
     protected $limit;
     protected $skip;
 
-    public function __construct($metadata, $collection, array $filters)
+    public function __construct($metadata, $collection, array $filters = [])
     {
         $this->metadata   = $metadata;
+        $this->scopes     = $metadata ? $metadata->getScopes() : [];
         $this->filter     = [];
         $this->projection = [];
         $this->collection = $collection;
@@ -71,6 +73,17 @@ class Query extends Cursor implements ArrayAccess
         } else if (!empty($filters)) {
             call_user_func_array([$this, 'where'], $filters);
         }
+    }
+
+    public function __call($function, $args)
+    {
+        $function = strtolower($function);
+        if (!empty($this->scopes[$function])) {
+            array_unshift($args, $this);
+            $method = [$this->metadata->getInstance(), $this->scopes[$function][0]];
+            return call_user_func_array($method, $args);
+        }
+        return parent::__call($function, $args);
     }
 
     public function getFilter()
