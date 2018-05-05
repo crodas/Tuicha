@@ -70,10 +70,15 @@ use MongoDB\BSON;
 class Metadata
 {
     protected static $allEvents = [
-        'before_create',
-        'before_update',
-        'before_save',
-        'after_save',
+        'retrieved' => ['retrieved'],
+        'creating'  => ['creating', 'before_create', 'beforeCreate'],
+        'created'   => ['created', 'after_create', 'afterCreate'],
+        'updating'  => ['updating', 'before_update', 'beforeUpdate'],
+        'updated'   => ['updated', 'after_update', 'afterUpdate'],
+        'saving'    => ['saving', 'before_save', 'beforeSave'],
+        'saved'     => ['saved', 'after_save', 'afterSave'],
+        'deleting'  => ['deleting', 'before_delete', 'beforeDelete'],
+        'deleted'   => ['deleted', 'after_delete', 'afterDelete' ],
     ];
 
     protected $className;
@@ -89,6 +94,7 @@ class Metadata
     protected $mProps  = [];
     protected $indexes = [];
     protected $events = [];
+    protected $observers = [];
     protected static $instances = [];
 
     /**
@@ -523,13 +529,14 @@ class Metadata
      */
     protected function getAllEventAnnotations()
     {
-        $events = [];
-        foreach (self::$allEvents as $event) {
-            $events[$event] = $event;
-            $events[str_replace("_", "", $event)] = $events;
+        $allEvents = [];
+        foreach (self::$allEvents as $eventName => $events) {
+            foreach ($events as $alias) {
+                $allEvents[$alias] = $eventName;
+            }
         }
 
-        return $events;
+        return $allEvents;
     }
 
     /**
@@ -700,17 +707,43 @@ class Metadata
      */
     public function triggerEvent($object, $eventName)
     {
-        if (empty($this->events[$eventName])) {
-            return $this;
-        }
-
-        foreach ($this->events[$eventName] as $event) {
-            if ($event['is_public']) {
-                $object->{$event['method']}($event['args']);
-            } else {
-                throw new RuntimeException("Only public methods are supported for now");
+        if (!empty($this->events[$eventName])) {
+            foreach ($this->events[$eventName] as $event) {
+                if ($event['is_public']) {
+                    $object->{$event['method']}($event['args']);
+                } else {
+                    throw new RuntimeException("Only public methods are supported for now");
+                }
             }
         }
+
+        if (!empty(self::$allEvents[$eventName])) {
+            foreach ($this->observers as $observer) {
+                foreach (self::$allEvents[$eventName] as $alias) {
+                    if (is_callable([$observer, $alias])) {
+                        $observer->$alias($object);
+                    }
+                }
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Register an observer class
+     *
+     * The external observer are called whenever an event is trigged.
+     *
+     * @param string $className
+     */
+    public function registerObserver($className)
+    {
+        if (!class_exists($className)) {
+            throw new RuntimeException("$className is not a valid class");
+        }
+
+        $this->observers[] = new $className;
         return $this;
     }
 
@@ -922,13 +955,13 @@ class Metadata
 
         $prevDocument = $this->getLastState($object);
 
-        $this->triggerEvent($object, 'before_save');
+        $this->triggerEvent($object, 'saving');
         if (!$prevDocument) {
-            $this->triggerEvent($object, 'before_create');
+            $this->triggerEvent($object, 'creating');
             $document['command']  = 'create';
             $document['document'] = $this->toDocument($object, true, true);
         } else {
-            $this->triggerEvent($object, 'before_update');
+            $this->triggerEvent($object, 'updating');
             $document['command'] = 'update';
             $diff = [];
             $new  = $this->toDocument($object);

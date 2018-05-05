@@ -289,4 +289,14 @@ trait Document
         return Metadata::of(static::class)->createIndexes();
     }
 
+    /**
+     * Register a class which is listening for events
+     *
+     * @param string $className
+     */
+    final public static function observe($className)
+    {
+        return Metadata::of(static::class)->registerObserver($className);
+    }
+
 }

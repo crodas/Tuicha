@@ -302,8 +302,10 @@ class Tuicha
             $wait
         );
 
-        $metadata->triggerEvent($object, 'after_save')
+        $metadata->triggerEvent($object, 'saved')
+            ->triggerEvent($object, $command['command'] === 'create' ? 'created' : 'updated')
             ->snapshot($object);
+
 
         return $return;
     }
