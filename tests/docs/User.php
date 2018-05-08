@@ -15,9 +15,11 @@ class User
 
     /**
      * @Validate(is_integer, @between(0, 99), "CustomValidator::isInt")
-     * @Int
      */
     public $age;
+
+    /** @Int */
+    public $karma;
 
     /** @reference(with=['email']) */
     public $ref;

@@ -348,6 +348,10 @@ class Metadata
             return true;
         }
 
+        if (!empty($definition['type']['type']) && $definition['type']['type'] !== 'class') {
+            settype($value, $definition['type']['type']);
+        }
+
         if ($value instanceof BSON\Type || is_scalar($value)) {
             return true;
         }
