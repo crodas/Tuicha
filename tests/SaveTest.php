@@ -191,4 +191,20 @@ class TestSave extends PHPUnit\Framework\TestCase
         $y->name = uniqid(true);
         $y->save();
     }
+
+    public function testEmbedWithType()
+    {
+        $x = new User;
+        $x->email = uniqid(true) . '@gmail.com';
+        $x->name = uniqid(true);
+
+        $y = new User;
+        $y->email = uniqid(true) . '@gmail.com';
+        $y->name = uniqid(true);
+        $y->addAnotherUser($x);
+        $y->save();
+
+        $this->assertEquals(null, User::find(['email' => $x->email])->first());
+        $this->assertEquals($x->email, User::find(['email' => $y->email])->first()->getAnotherUser()->email);
+    }
 }
