@@ -18,8 +18,14 @@ class User
      */
     public $age;
 
+    /** @Int */
+    public $karma;
+
     /** @reference(with=['email']) */
     public $ref;
+
+    /**  @class(User::class) */
+    protected $another_user;
 
     public function t()
     {
@@ -28,6 +34,16 @@ class User
             $val = uniqid();
         }
         return $val;
+    }
+
+    public function addAnotherUser(User $user)
+    {
+        $this->another_user = $user;
+    }
+
+    public function getAnotherUser()
+    {
+        return $this->another_user;
     }
 
     public function scopeTeens($query)

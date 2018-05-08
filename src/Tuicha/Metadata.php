@@ -348,6 +348,10 @@ class Metadata
             return true;
         }
 
+        if (!empty($definition['type']['type']) && $definition['type']['type'] !== 'class') {
+            settype($value, $definition['type']['type']);
+        }
+
         if ($value instanceof BSON\Type || is_scalar($value)) {
             return true;
         }
@@ -470,6 +474,33 @@ class Metadata
     }
 
     /**
+     * Returns the data type definition for a property
+     *
+     * @param Annotations $annotations  Property's annotations object
+     *
+     * @return array
+     */
+    protected function getDataType(Annotations $annotations)
+    {
+        $types = 'int,integer,float,double,array,bool,boolean,string,object,class,type';
+        $type  = [];
+        if ($annotation = $annotations->getOne($types)) {
+            $type['type'] = $annotation->getName();
+
+            switch ($annotation->getName()) {
+            case 'class':
+                $type['class'] = $annotation->getArg();
+                break;
+            case 'type':
+                $type = $annotation->getArgs();
+                break;
+            }
+        }
+
+        return $type;
+    }
+
+    /**
      * Processes properties
      *
      * Processes properties from a class and extracts all the metadata for future
@@ -507,7 +538,7 @@ class Metadata
             'required'    => $annotations->has('required'),
             'is_public'   => $property->isPublic(),
             'is_private'  => $property->isPrivate(),
-            'type'        => $annotations->has('type') ? $annotations->getOne('type')->getArgs() : NULL,
+            'type'        => $this->getDataType($annotations),
             'mongoProp'   => $mongoName,
             'phpProp'     => $phpName,
         ];
@@ -758,8 +789,8 @@ class Metadata
      */
     protected function newInstanceByType($type, $document, $isNested = false)
     {
-        if (!empty($type['class'])) {
-            return Metadata::of($type['class'])->newInstance($document, $isNested);
+        if (!empty($type['class']) && $document) {
+            return Metadata::of($type['class'])->newInstance((array)$document, $isNested);
         }
 
         return $document;
