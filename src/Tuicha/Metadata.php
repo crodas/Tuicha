@@ -802,13 +802,17 @@ class Metadata
             return $value;
         }
 
-        if (!empty($value->{'$ref'}) && !empty($value->{'$id'})) {
-            $value = new Reference((array)$value);
+        if (is_object($value)) {
+            return $value;
+        }
+
+        if (!empty($value['$ref']) && !empty($value['$id'])) {
+            $value = new Reference($value);
         } else if (!empty($prop['type'])) {
             $value = $this->newInstanceByType($prop['type'], $value, true);
-        } else if (!empty($value->__type)) {
-            $value = $this->newInstanceByType((array)$value->__type, (array)$value, true);
-        } else if (is_array($value))  {
+        } else if (!empty($value['__type'])) {
+            $value = $this->newInstanceByType($value['__type'], $value, true);
+        } else if (is_array($value)) {
             foreach ($value as $k => $v) {
                 $value[$k] = $this->hydratate($prop, $v);
             }
@@ -830,7 +834,7 @@ class Metadata
      */
     public function newInstance(array $document, $isNested = false)
     {
-        $class  = empty($document['__type']->class) ? $this->className : $document['__type']->class;
+        $class  = empty($document['__type']['class']) ? $this->className : $document['__type']['class'];
         $object = new $class;
         foreach ($document as $key => $value) {
             $prop = null;

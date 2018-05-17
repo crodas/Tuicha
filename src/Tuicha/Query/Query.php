@@ -113,7 +113,7 @@ class Query extends Cursor implements ArrayAccess
         $query = new Driver\Query($this->getFilter(), $this->getQueryOptions());
 
         $cursor = $this->collection->query($query);
-        $cursor->setTypeMap(['root' => 'array', 'document' => 'stdclass', 'array' => 'array']);
+        $cursor->setTypeMap(['root' => 'array', 'document' => 'array', 'array' => 'array']);
         $this->setResultSet(new IteratorIterator($cursor));
     }
 
@@ -124,7 +124,7 @@ class Query extends Cursor implements ArrayAccess
         $query = new Driver\Query($this->getFilter(), $options);
 
         $cursor = $this->collection->query($query);
-        $cursor->setTypeMap(['root' => 'array', 'document' => 'stdclass', 'array' => 'array']);
+        $cursor->setTypeMap(['root' => 'array', 'document' => 'array', 'array' => 'array']);
 
         $result = $cursor->toArray();
 

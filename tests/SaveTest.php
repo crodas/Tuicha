@@ -209,4 +209,23 @@ class TestSave extends PHPUnit\Framework\TestCase
         $this->assertEquals(null, User::find(['email' => $x->email])->first());
         $this->assertEquals($x->email, User::find(['email' => $y->email])->first()->getAnotherUser()->email);
     }
+
+    public function testSaveArrayByDefault()
+    {
+        $x = new User;
+        $x->email = uniqid(true) . '@gmail.com';
+        $x->karma = '33';
+        $x->name  = uniqid(true);
+        $x->random = ['foo' => 1, 'bar' => 2];
+        $x->Save();
+
+        $y = User::find(['id' => $x->id])->first();
+        $this->assertTrue(is_array($y->random));
+        $y->random = (object) $y->random;
+        $y->save();
+
+        $z = User::find(['id' => $x->id])->first();
+        $this->assertFalse(is_array($z->random));
+
+    }
 }
