@@ -941,7 +941,6 @@ class Metadata
             '$id'  => $this->getId($object),
         ];
 
-        $fields = ['id', 'email'];
         if (!empty($fields)) {
             $reference['__cache'] = [];
             foreach ($fields as $field) {

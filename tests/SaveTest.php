@@ -158,6 +158,10 @@ class TestSave extends PHPUnit\Framework\TestCase
         $this->assertEquals($x->ref->id, User::find(['id' => $x->ref->id])->first()->id);
         $this->assertEquals(Tuicha\Reference::class, get_class(User::find(['id' => $x->id])->first()->ref));
 
+        $x = User::where('id', $x->id)->first();
+        $x->ref->email = 'foo@xxx.net';
+        $x->save();
+
         $user = User::find(['id' => $x->id])->first();
         $this->assertEquals($x->ref->email, $user->ref->email);
 
