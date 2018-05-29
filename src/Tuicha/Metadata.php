@@ -834,8 +834,14 @@ class Metadata
      */
     public function newInstance(array $document, $isNested = false)
     {
+        static $reflections = [];
+
         $class  = empty($document['__type']['class']) ? $this->className : $document['__type']['class'];
-        $object = new $class;
+        $_class = strtolower($class);
+        if (empty($reflections[$_class])) {
+            $reflections[$_class] = new ReflectionClass($class);
+        }
+        $object = $reflections[$_class]->newInstanceWithoutConstructor();
         foreach ($document as $key => $value) {
             $prop = null;
             if (!empty($this->pProps[$key]) ||  !empty($this->mProps[$key])) {
