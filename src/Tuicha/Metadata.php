@@ -482,12 +482,15 @@ class Metadata
      */
     protected function getDataType(Annotations $annotations)
     {
-        $types = 'int,integer,float,double,array,bool,boolean,string,object,class,type';
+        $types = 'int,integer,float,double,array,bool,boolean,string,object,class,type,id';
         $type  = [];
         if ($annotation = $annotations->getOne($types)) {
             $type['type'] = $annotation->getName();
 
             switch ($annotation->getName()) {
+            case 'id':
+                $type = 'id';
+                break;
             case 'class':
                 $type['class'] = $annotation->getArg();
                 break;
