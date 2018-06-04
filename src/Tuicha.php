@@ -349,9 +349,9 @@ class Tuicha
         }
     }
 
-    public static function makeReference($object)
+    public static function makeReference($object, $with = [], $readOnly = false)
     {
-        return Metadata::of($object)->makeReference($object);
+        return Metadata::of($object)->makeReference($object, $with, $readOnly);
     }
 
     /**

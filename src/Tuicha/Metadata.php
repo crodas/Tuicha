@@ -384,7 +384,7 @@ class Metadata
                 if (!empty($definition['is_reference']['with'])) {
                     $with = (array) $definition['is_reference']['with'];
                 }
-                $value = $meta->makeReference($this->save($value), $with);
+                $value = $meta->makeReference($this->save($value), $with, !empty($definition['is_reference']['readonly']));
                 return true;
             }
 
@@ -975,7 +975,7 @@ class Metadata
         }
     }
 
-    public function makeReference($object, array $fields = [])
+    public function makeReference($object, array $fields = [], $readOnly = false)
     {
         $reference = [
             '$ref' => $this->getCollectionName(),
@@ -989,7 +989,7 @@ class Metadata
             }
         }
 
-        return new Reference($reference);
+        return new Reference($reference, $readOnly);
     }
 
     /**

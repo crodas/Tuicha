@@ -59,6 +59,7 @@ class Reference implements Serializable
     protected $document;
     protected $cache = [];
     protected $properties;
+    protected $readOnly;
 
     public function bsonSerialize()
     {
@@ -69,13 +70,14 @@ class Reference implements Serializable
         return $reference;
     }
 
-    public function __construct(array $reference)
+    public function __construct(array $reference, $readOnly = false)
     {
         $this->ref   = $reference['$ref'];
         $this->id    = $reference['$id'];
         $this->cache = (array) (!empty($reference['__cache']) ? $reference['__cache'] : []);
         $metadata    = Metadata::ofCollection($this->ref);
         $this->properties = $metadata ? $metadata->getProperties() : [];
+        $this->readOnly   = $readOnly;
     }
 
     /**
@@ -105,7 +107,7 @@ class Reference implements Serializable
      */
     public function save()
     {
-        if ($this->document && is_callable([$this->document, 'save'])) {
+        if ($this->document && ! $this->readOnly && is_callable([$this->document, 'save'])) {
             return $this->document->save();
         }
     }
