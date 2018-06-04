@@ -200,12 +200,12 @@ class TestSave extends PHPUnit\Framework\TestCase
     {
         $x = new User;
         $x->email = uniqid(true) . '@gmail.com';
-        $x->karma = '33';
+        $x->karma = ['33'];
         $x->name  = uniqid(true);
 
         $y = new User;
         $y->email = uniqid(true) . '@gmail.com';
-        $y->karma = 33.99;
+        $y->karma = [33.99];
         $y->name  = uniqid(true);
         $y->addAnotherUser($x);
         $y->save();
@@ -218,7 +218,7 @@ class TestSave extends PHPUnit\Framework\TestCase
     {
         $x = new User;
         $x->email = uniqid(true) . '@gmail.com';
-        $x->karma = '33';
+        $x->karma = ['33'];
         $x->name  = uniqid(true);
         $x->random = ['foo' => 1, 'bar' => 2];
         $x->Save();

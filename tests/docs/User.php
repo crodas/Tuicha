@@ -18,7 +18,10 @@ class User
      */
     public $age;
 
-    /** @Int */
+    /** @Array */
+    public $array;
+
+    /** @Array(@Int) */
     public $karma;
 
     /** @reference(with=['email']) */

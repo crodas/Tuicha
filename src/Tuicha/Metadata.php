@@ -362,8 +362,16 @@ class Metadata
         }
 
         if (is_array($value)) {
+            // Change the data type for the element
+            $childDefinition = [];
+            if (!empty($definition['type']['element'])) {
+                $childDefinition['type'] = $definition['type']['element'];
+            } else {
+                $childDefinition['type'] = [];
+            }
+
             foreach ($value as $key => $val) {
-                $this->serializeValue($propertyName, $definition, $val, $validate);
+                $this->serializeValue($propertyName, $childDefinition, $val, $validate);
                 $value[$key] = $val;
             }
         }
@@ -474,6 +482,38 @@ class Metadata
     }
 
     /**
+     * Get the type definition from a single Annotation.
+     *
+     *
+     * @return array
+     */
+    protected function getDataTypeFromAnnotation(Annotation $annotation)
+    {
+        $type = ['type' => $annotation->getName()];
+
+        switch ($annotation->getName()) {
+        case 'id':
+            $type = 'id';
+            break;
+        case 'class':
+            $type['class'] = $annotation->getArg();
+            break;
+        case 'array':
+            try {
+                $arg = $annotation->getArg();
+                $type['element'] = $this->getDataTypeFromAnnotation($arg);
+            } catch (RuntimeException $e) {
+            }
+            break;
+        case 'type':
+            $type = $annotation->getArgs();
+            break;
+        }
+
+        return $type;
+    }
+
+    /**
      * Returns the data type definition for a property
      *
      * @param Annotations $annotations  Property's annotations object
@@ -483,24 +523,11 @@ class Metadata
     protected function getDataType(Annotations $annotations)
     {
         $types = 'int,integer,float,double,array,bool,boolean,string,object,class,type,id';
-        $type  = [];
         if ($annotation = $annotations->getOne($types)) {
-            $type['type'] = $annotation->getName();
-
-            switch ($annotation->getName()) {
-            case 'id':
-                $type = 'id';
-                break;
-            case 'class':
-                $type['class'] = $annotation->getArg();
-                break;
-            case 'type':
-                $type = $annotation->getArgs();
-                break;
-            }
+            return $this->getDataTypeFromAnnotation($annotation);
         }
 
-        return $type;
+        return [];
     }
 
     /**
