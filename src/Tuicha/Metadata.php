@@ -484,7 +484,6 @@ class Metadata
     /**
      * Get the type definition from a single Annotation.
      *
-     *
      * @return array
      */
     protected function getDataTypeFromAnnotation(Annotation $annotation)
@@ -821,6 +820,12 @@ class Metadata
     {
         if (!empty($type['class']) && $document) {
             return Metadata::of($type['class'])->newInstance((array)$document, $isNested);
+        }
+
+        if ($type['type'] === 'array' && !empty($type['element'])) {
+            foreach ($document as $id => $value) {
+                $document[$id] = $this->hydratate(['type' => $type['element']], $value);
+            }
         }
 
         return $document;
