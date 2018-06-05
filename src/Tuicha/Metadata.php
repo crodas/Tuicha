@@ -842,7 +842,7 @@ class Metadata
         }
 
         if (!empty($value['$ref']) && !empty($value['$id'])) {
-            $value = new Reference($value);
+            $value = new Reference($value, !empty($prop['is_reference']['readonly']));
         } else if (!empty($prop['type'])) {
             $value = $this->newInstanceByType($prop['type'], $value, true);
         } else if (!empty($value['__type'])) {
