@@ -348,7 +348,7 @@ class Metadata
             return true;
         }
 
-        if (!empty($definition['type']['type']) && $definition['type']['type'] !== 'class') {
+        if (!empty($definition['type']['type']) && !in_array($definition['type']['type'], ['reference', 'class'])) {
             settype($value, $definition['type']['type']);
         }
 
@@ -379,12 +379,12 @@ class Metadata
         if (is_object($value)) {
             $class = strtolower(get_class($value));
             $meta  = Metadata::of($class);
-            if (array_key_exists('is_reference', $definition) && $definition['is_reference'] !== false) {
+            if (!empty($definition['type']['type']) && $definition['type']['type'] === 'reference') {
                 $with = [];
-                if (!empty($definition['is_reference']['with'])) {
-                    $with = (array) $definition['is_reference']['with'];
+                if (!empty($definition['type']['with'])) {
+                    $with = (array) $definition['type']['with'];
                 }
-                $value = $meta->makeReference($this->save($value), $with, !empty($definition['is_reference']['readonly']));
+                $value = $meta->makeReference($this->save($value), $with, !empty($definition['type']['readonly']));
                 return true;
             }
 
@@ -504,6 +504,9 @@ class Metadata
             } catch (RuntimeException $e) {
             }
             break;
+        case 'reference':
+            $type = array_merge($annotation->getArgs(), $type);
+            break;
         case 'type':
             $type = $annotation->getArgs();
             break;
@@ -521,7 +524,7 @@ class Metadata
      */
     protected function getDataType(Annotations $annotations)
     {
-        $types = 'int,integer,float,double,array,bool,boolean,string,object,class,type,id';
+        $types = 'int,integer,float,double,array,bool,boolean,string,object,class,type,id,reference';
         if ($annotation = $annotations->getOne($types)) {
             return $this->getDataTypeFromAnnotation($annotation);
         }
@@ -563,7 +566,6 @@ class Metadata
         $propData = [
             'annotations' => [],
             'validations' => $this->getAnnotationArguments($annotations->get('validate')),
-            'is_reference' => $annotations->has('reference') ? $annotations->getOne('reference')->getArgs() : false,
             'required'    => $annotations->has('required'),
             'is_public'   => $property->isPublic(),
             'is_private'  => $property->isPrivate(),
@@ -842,7 +844,7 @@ class Metadata
         }
 
         if (!empty($value['$ref']) && !empty($value['$id'])) {
-            $value = new Reference($value, !empty($prop['is_reference']['readonly']));
+            $value = new Reference($value, !empty($prop['type']['readonly']));
         } else if (!empty($prop['type'])) {
             $value = $this->newInstanceByType($prop['type'], $value, true);
         } else if (!empty($value['__type'])) {
