@@ -349,6 +349,27 @@ class Tuicha
         }
     }
 
+    /**
+     * Creates a database reference to the current object.
+     *
+     * MongoDB references are a standard way of referencing another document within the same database.
+     *
+     * Tuicha will dereference the object automatically at run-time if needed. References created by Tuicha
+     * may cache some properties. These cached properties will be stored in the reference structure.
+     *
+     * Cached properties are helpful to avoid dereferencing (loading the referenced document from the database)
+     * when reading the property. lease notice that Tuicha does not update the cached properties should the 
+     * object is updated.
+     *
+     * Optionally references may be flagged as 'read-only'. That means that any modifications will be ignored, by
+     * default all references are not read-only and any modifications will be persisted in the referenced document.
+     *
+     * @param object $object        Object to reference
+     * @param array  $fields        Which fields should be cached within the reference
+     * @param bool   $readOnly      Whether to flag the reference as read-only or not.
+     *
+     * @return Tuicha\Reference
+     */
     public static function makeReference($object, $with = [], $readOnly = false)
     {
         return Metadata::of($object)->makeReference($object, $with, $readOnly);

@@ -61,6 +61,11 @@ class Reference implements Serializable
     protected $properties;
     protected $readOnly;
 
+    /**
+     * Serializes the reference object.
+     *
+     * @return array
+     */
     public function bsonSerialize()
     {
         $reference = ['$ref' => $this->ref, '$id' => $this->id];

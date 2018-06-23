@@ -1,7 +1,7 @@
 <?php
 /*
   +---------------------------------------------------------------------------------+
-  | Copyright (c) 2017 César D. Rodas                                               |
+  | Copyright (c) 2018 César D. Rodas                                               |
   +---------------------------------------------------------------------------------+
   | Redistribution and use in source and binary forms, with or without              |
   | modification, are permitted provided that the following conditions are met:     |
@@ -795,7 +795,7 @@ class Metadata
     /**
      * Register an observer class
      *
-     * The external observer are called whenever an event is trigged.
+     * The external observer are called whenever an event is triggered.
      *
      * @param string $className
      */
@@ -833,13 +833,21 @@ class Metadata
         return $document;
     }
 
+    /**
+     * Hydratates a value from MongoDB to PHP
+     *
+     * The hydratation is when a value is taken from MongoDB and stored in PHP.
+     *
+     * This function will apply any data casting that may be needed.
+     *
+     * @param string $prop
+     * @param mixed  $value
+     *
+     * @return mixed
+     */
     protected function hydratate($prop, $value)
     {
-        if (is_scalar($value)) {
-            return $value;
-        }
-
-        if (is_object($value)) {
+        if (is_scalar($value) || is_object($value)) {
             return $value;
         }
 
@@ -921,7 +929,7 @@ class Metadata
     }
 
     /**
-     * Returns the property name where the Document Id is stored.
+     * Returns the property name where the Document Id is stored in PHP.
      *
      * @return string
      */
@@ -930,6 +938,11 @@ class Metadata
         return $this->idProperty;
     }
 
+    /**
+     * Returns all the defined properties in the PHP class.
+     *
+     * @return array
+     */
     public function getProperties()
     {
         return $this->pProps;
@@ -977,6 +990,27 @@ class Metadata
         }
     }
 
+    /**
+     * Creates a database reference to the current object.
+     *
+     * MongoDB references are a standard way of referencing another document within the same database.
+     *
+     * Tuicha will dereference the object automatically at run-time if needed. References created by Tuicha
+     * may cache some properties. These cached properties will be stored in the reference structure.
+     *
+     * Cached properties are helpful to avoid dereferencing (loading the referenced document from the database)
+     * when reading the property. lease notice that Tuicha does not update the cached properties should the 
+     * object is updated.
+     *
+     * Optionally references may be flagged as 'read-only'. That means that any modifications will be ignored, by
+     * default all references are not read-only and any modifications will be persisted in the referenced document.
+     *
+     * @param object $object        Object to reference
+     * @param array  $fields        Which fields should be cached within the reference
+     * @param bool   $readOnly      Whether to flag the reference as read-only or not.
+     *
+     * @return Tuicha\Reference
+     */
     public function makeReference($object, array $fields = [], $readOnly = false)
     {
         $reference = [
@@ -1052,10 +1086,19 @@ class Metadata
         return $document;
     }
 
-    protected function validate($key, $value, $definition)
+    /**
+     * Validates a property's value
+     *
+     * @param string $property      Property name
+     * @param mixed  $value         Property value
+     * @param array  $definition    Property definition*
+     *
+     * @return mixed
+     */
+    protected function validate($property, $value, $definition)
     {
         if (empty($value) && $definition['required']) {
-            throw new UnexpectedValueException("Unexpected empty value for property $key");
+            throw new UnexpectedValueException("Unexpected empty value for property $property");
         } else if ($value && !empty($definition['validations'])) {
             foreach ($definition['validations'] as $validation) {
                 $response = true;
@@ -1067,7 +1110,7 @@ class Metadata
                 }
 
                 if (!$response) {
-                    throw new UnexpectedValueException("Invalid value for $key ($value)");
+                    throw new UnexpectedValueException("Invalid value for $property ($value)");
                 }
             }
         }
