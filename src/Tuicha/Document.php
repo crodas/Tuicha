@@ -1,7 +1,7 @@
 <?php
 /*
   +---------------------------------------------------------------------------------+
-  | Copyright (c) 2017 César D. Rodas                                               |
+  | Copyright (c) 2018 César D. Rodas                                               |
   +---------------------------------------------------------------------------------+
   | Redistribution and use in source and binary forms, with or without              |
   | modification, are permitted provided that the following conditions are met:     |
@@ -272,9 +272,18 @@ trait Document
         return Metadata::of(static::class)->getIdProperty();
     }
 
-    public static function resolveRouteBinding($value)
+    /**
+     * Laravel compatibility function
+     *
+     * Retrieve model for route model binding.
+     *
+     * @param mixed $routeKey
+     *
+     * @return mixed
+     */
+    public static function resolveRouteBinding($routeKey)
     {
-        return static::find(['_id' => $value])->first();
+        return static::find(['_id' => $routeKey])->first();
     }
 
     /**
