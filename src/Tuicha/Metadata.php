@@ -824,7 +824,7 @@ class Metadata
             return Metadata::of($type['class'])->newInstance((array)$document, $isNested);
         }
 
-        if ($type['type'] === 'array' && !empty($type['element'])) {
+        if (!empty($type['type']) && $type['type'] === 'array' && !empty($type['element'])) {
             foreach ($document as $id => $value) {
                 $document[$id] = $this->hydratate(['type' => $type['element']], $value);
             }
