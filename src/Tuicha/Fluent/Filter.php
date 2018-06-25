@@ -146,7 +146,6 @@ abstract class Filter
             break;
         }
 
-        $op = strtolower($op);
         if (!empty(self::$math[$op])) {
             $op = self::$math[$op];
         } else if ($op[0] !== '$') {
@@ -353,6 +352,34 @@ abstract class Filter
     public function all($property, array $array)
     {
         return $this->where($property, '$all', $array);
+    }
+
+    /**
+     * $elemMatch operation
+     *
+     * @link https://docs.mongodb.com/manual/reference/operator/query/elemMatch/#op._S_elemMatch
+     *
+     * @param string $property  Property name
+     * @param array  $query     Value
+     *
+     * @return $this
+     */
+    public function elemMatch($property, array $query)
+    {
+        return $this->where($property, '$elemMatch', $query);
+    }
+
+    /**
+     * Alias of elemMatch()
+     *
+     * @param string $property  Property name
+     * @param array  $query     Value
+     *
+     * @return $this
+     */
+    public function elementMatch($property, array $query)
+    {
+        return $this->where($property, '$elemMatch', $query);
     }
 
     /**

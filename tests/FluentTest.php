@@ -284,8 +284,18 @@ class FluentTest extends PHPUnit\Framework\TestCase
 
     public function testWhereNoDollar()
     {
-        $query = User::find()->where('foo', 'NIN', [1,2]);
+        $query = User::find()->where('foo', 'nin', [1,2]);
         $this->assertEquals(['foo' => ['$nin' => [1,2]]], $query->getFilter());
+    }
+
+    public function testElemMatch()
+    {
+        $query = User::find()->foo->elemMatch(['foo' => 'bar']);
+        $this->assertEquals(['foo' => ['$elemMatch' => ['foo' => 'bar']]], $query->GetFilter());
+
+        $query1 = User::find()->foo->elemMatch(['foo' => 'bar']);
+        $query2 = User::find()->foo->elementMatch(['foo' => 'bar']);
+        $this->assertEquals($query1->getFilter(), $query2->getFilter());
     }
 
     public function testNotExpr()
