@@ -53,15 +53,29 @@ trait Document
     private $__lastInstance;
     private $__id;
 
-    public function __setState(Array $state)
+    /**
+     * Sets the "last Instance" value
+     *
+     * This value is used to compare the current state of the object
+     * against the database value, to push only properties that has
+     * any changes.
+     *
+     * @param array $document
+     */
+    public function __setLastInstance(Array $document)
     {
-        $this->__lastInstance = $state;
-        if (!empty($state['_id'])) {
-            $this->__id = $state['_id'];
+        $this->__lastInstance = $document;
+        if (!empty($document['_id'])) {
+            $this->__id = $document['_id'];
         }
     }
 
-    public function __getState()
+    /**
+     * Returns the last instance value.
+     *
+     * @return array
+     */
+    public function __getLastInstance()
     {
         return $this->__lastInstance;
     }

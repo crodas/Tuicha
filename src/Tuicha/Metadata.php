@@ -986,7 +986,7 @@ class Metadata
                 $object->__id = $state['_id'];
             }
         } else {
-            $object->__setState($data);
+            $object->__setLastInstance($data);
         }
     }
 
@@ -1036,7 +1036,7 @@ class Metadata
     protected function getLastState($object)
     {
         if ($this->hasTrait) {
-            return $object->__getState();
+            return $object->__getLastInstance();
         }
 
         return !empty($object->__lastInstance)
