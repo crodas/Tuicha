@@ -98,4 +98,20 @@ class MetadataTest extends PHPUnit\Framework\TestCase
             ]
         ], $indexes);
     }
+
+    public function testGetTuichaMetadata()
+    {
+        $this->assertEquals(
+            User::getTuichaMetadata(),
+            Metadata::of(User::class)
+        );
+    }
+
+    public function testPropertiesByAnnotation()
+    {
+        $properties = User::getTuichaMetadata()->getPropertiesByAnnotation('@required');
+        $this->assertTrue(is_array($properties));
+        $this->assertFalse(empty($properties));
+        $this->assertTrue(array_key_exists('name', $properties));
+    }
 }

@@ -81,6 +81,16 @@ trait Document
     }
 
     /**
+     * Returns the Tuicha\Metadata instance for the current class/object
+     *
+     * @return Tuicha\Metadata
+     */
+    final static function getTuichaMetadata()
+    {
+        return Metadata::of(static::class);
+    }
+
+    /**
      * Finds documents in a collection.
      *
      * @return Tuicha\Query

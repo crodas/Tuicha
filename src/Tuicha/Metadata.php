@@ -69,7 +69,7 @@ use MongoDB\BSON;
  */
 class Metadata
 {
-    protected static $allEvents = [
+     protected static $allEvents = [
         'retrieved' => ['retrieved'],
         'creating'  => ['creating', 'before_create', 'beforeCreate'],
         'created'   => ['created', 'after_create', 'afterCreate'],
@@ -90,8 +90,9 @@ class Metadata
     protected $idProperty = null;
     protected $files;
     protected $hasTrait = false;
-    protected $pProps  = [];
-    protected $mProps  = [];
+    protected $phpProperties        = [];
+    protected $mongoProperties      = [];
+    protected $propertyByAnnotation = [];
     protected $indexes = [];
     protected $events = [];
     protected $observers = [];
@@ -163,6 +164,10 @@ class Metadata
             $this->processProperty($property);
         }
 
+        foreach ($this->propertyByAnnotation as $annotation => $properties) {
+            $this->propertyByAnnotation[$annotation] = array_unique($properties);
+        }
+
         foreach ($reflection->getMethods() as $method) {
             $this->processMethod($method);
         }
@@ -179,8 +184,8 @@ class Metadata
                 'phpProp' => 'id',
             ];
 
-            $this->pProps['id'] = $definition;
-            $this->mProps['_id'] = $definition;
+            $this->phpProperties['id']    = $definition;
+            $this->mongoProperties['_id'] = $definition;
             $this->idProperty  = 'id';
         }
     }
@@ -578,10 +583,11 @@ class Metadata
 
         foreach ($annotations as $annotation) {
             $propData['annotations'][] = [$annotation->getName(), $annotation->getArgs()];
+            $this->propertyByAnnotation[$annotation->getName()][] = $property->getName();
         }
 
-        $this->pProps[$phpName]   = $propData;
-        $this->mProps[$mongoName] = $propData;
+        $this->phpProperties[$phpName]     = $propData;
+        $this->mongoProperties[$mongoName] = $propData;
     }
 
     /**
@@ -889,8 +895,8 @@ class Metadata
         $object = $reflections[$_class]->newInstanceWithoutConstructor();
         foreach ($document as $key => $value) {
             $prop = null;
-            if (!empty($this->pProps[$key]) ||  !empty($this->mProps[$key])) {
-                $prop = !empty($this->mProps[$key]) ? $this->mProps[$key] : $this->pProps[$key];
+            if (!empty($this->phpProperties[$key]) ||  !empty($this->mongoProperties[$key])) {
+                $prop = !empty($this->mongoProperties[$key]) ? $this->mongoProperties[$key] : $this->phpProperties[$key];
                 $key  = $prop['phpProp'];
             }
 
@@ -945,7 +951,27 @@ class Metadata
      */
     public function getProperties()
     {
-        return $this->pProps;
+        return $this->phpProperties;
+    }
+
+    /**
+     * Returns all defined properties which has a given annotation
+     *
+     * @return array
+     */
+    public function getPropertiesByAnnotation($name)
+    {
+        $name = strtolower(ltrim($name, '@'));
+        if (empty($this->propertyByAnnotation[$name])) {
+            return [];
+        }
+
+        $properties = [];
+        foreach ($this->propertyByAnnotation[$name] as $property) {
+            $properties[$property] = $this->phpProperties[$property];
+        }
+
+        return $properties;
     }
 
     /**
@@ -955,7 +981,7 @@ class Metadata
      */
     public function getId($object)
     {
-        $id = $this->pProps[$this->idProperty];
+        $id = $this->phpProperties[$this->idProperty];
         if ($id['is_public']) {
             return $object->{$id['phpProp']};
         }
@@ -999,7 +1025,7 @@ class Metadata
      * may cache some properties. These cached properties will be stored in the reference structure.
      *
      * Cached properties are helpful to avoid dereferencing (loading the referenced document from the database)
-     * when reading the property. lease notice that Tuicha does not update the cached properties should the 
+     * when reading the property. lease notice that Tuicha does not update the cached properties should the
      * object is updated.
      *
      * Optionally references may be flagged as 'read-only'. That means that any modifications will be ignored, by
@@ -1137,7 +1163,7 @@ class Metadata
             return $object->bsonSerialize();
         }
 
-        foreach ($this->pProps as $key => $definition) {
+        foreach ($this->phpProperties as $key => $definition) {
             $mongo = $definition['mongoProp'];
 
             if ($definition['is_public']) {
@@ -1160,7 +1186,7 @@ class Metadata
         }
 
         foreach (get_object_vars($object) as $key => $value) {
-            if (empty($this->pProps[$key]) && empty($this->mProps[$key])) {
+            if (empty($this->phpProperties[$key]) && empty($this->mongoProperties[$key])) {
                 if (!$this->serializeValue($key, [], $value, $validate)) {
                     continue;
                 }
@@ -1174,7 +1200,7 @@ class Metadata
 
         if (empty($array['_id']) && $generateId) {
             $array['_id'] = new ObjectID;
-            $id = $this->pProps[$this->idProperty];
+            $id = $this->phpProperties[$this->idProperty];
             if ($id['is_public']) {
                 $object->{$this->idProperty} = $array['_id'];
             } else {
@@ -1198,8 +1224,8 @@ class Metadata
     public function getPropertyValue($object, $property)
     {
         $value = null;
-        if (!empty($this->pProps[$property])) {
-            $definition = $this->pProps[$property];
+        if (!empty($this->phpProperties[$property])) {
+            $definition = $this->phpProperties[$property];
             if ($definition['is_public']) {
                 $php   = $definition['phpProp'];
                 $value = $object->$php;
