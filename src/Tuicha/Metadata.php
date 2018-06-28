@@ -180,8 +180,8 @@ class Metadata
                 'is_public' => true,
                 'is_private' => false,
                 'type' => 'id',
-                'mongoProp' => '_id',
-                'phpProp' => 'id',
+                'mongoName' => '_id',
+                'phpName' => 'id',
             ];
 
             $this->phpProperties['id']    = $definition;
@@ -479,7 +479,7 @@ class Metadata
             $order = empty($args['desc']) ? 1 : -1;
         }
         $this->defineIndex([
-            'key' => [$propData['mongoProp'] => $order],
+            'key' => [$propData['mongoName'] => $order],
             'unique' => $index->getName() === 'unique',
             'sparse' => !empty($args['sparse']),
             'background' => true,
@@ -575,8 +575,8 @@ class Metadata
             'is_public'   => $property->isPublic(),
             'is_private'  => $property->isPrivate(),
             'type'        => $this->getDataType($annotations),
-            'mongoProp'   => $mongoName,
-            'phpProp'     => $phpName,
+            'mongoName'   => $mongoName,
+            'phpName'     => $phpName,
         ];
 
         $this->processPropertyIndexes($propData, $annotations);
@@ -897,7 +897,7 @@ class Metadata
             $prop = null;
             if (!empty($this->phpProperties[$key]) ||  !empty($this->mongoProperties[$key])) {
                 $prop = !empty($this->mongoProperties[$key]) ? $this->mongoProperties[$key] : $this->phpProperties[$key];
-                $key  = $prop['phpProp'];
+                $key  = $prop['phpName'];
             }
 
             $value = is_scalar($value) ? $value : $this->hydratate($prop, $value);
@@ -983,10 +983,10 @@ class Metadata
     {
         $id = $this->phpProperties[$this->idProperty];
         if ($id['is_public']) {
-            return $object->{$id['phpProp']};
+            return $object->{$id['phpName']};
         }
 
-        $property = new ReflectionProperty($this->className, $id['phpProp']);
+        $property = new ReflectionProperty($this->className, $id['phpName']);
         $property->setAccessible(true);
         return $property->getValue($object);
     }
@@ -1164,13 +1164,13 @@ class Metadata
         }
 
         foreach ($this->phpProperties as $key => $definition) {
-            $mongo = $definition['mongoProp'];
+            $mongo = $definition['mongoName'];
 
             if ($definition['is_public']) {
                 if (empty($keys[$key])) {
                     continue;
                 }
-                $php   = $definition['phpProp'];
+                $php   = $definition['phpName'];
                 $value = $object->$php;
             } else {
                 $property = new ReflectionProperty($this->className, $key);
@@ -1227,7 +1227,7 @@ class Metadata
         if (!empty($this->phpProperties[$property])) {
             $definition = $this->phpProperties[$property];
             if ($definition['is_public']) {
-                $php   = $definition['phpProp'];
+                $php   = $definition['phpName'];
                 $value = $object->$php;
             } else {
                 $property = new ReflectionProperty($this->className, $property);

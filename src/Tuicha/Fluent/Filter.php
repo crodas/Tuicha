@@ -580,9 +580,9 @@ abstract class Filter
     protected function normalize(Metadata $metadata, array $query)
     {
         foreach ($metadata->getProperties() as $property) {
-            if ($property['phpProp'] !== $property['mongoProp'] && array_key_exists($property['phpProp'], $query) && !array_key_exists($property['mongoProp'], $query)) {
-                $query[$property['mongoProp']] = $query[$property['phpProp']];
-                unset($query[$property['phpProp']]);
+            if ($property['phpName'] !== $property['mongoName'] && array_key_exists($property['phpName'], $query) && !array_key_exists($property['mongoName'], $query)) {
+                $query[$property['mongoName']] = $query[$property['phpName']];
+                unset($query[$property['phpName']]);
             }
         }
 
