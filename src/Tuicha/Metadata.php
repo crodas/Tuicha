@@ -405,7 +405,7 @@ class Metadata
      *
      * @return array
      */
-    protected function getAnnotationArguments(Array $annotations)
+    protected function getAnnotationArguments(array $annotations)
     {
         $arguments = [];
         foreach ($annotations as $annotation) {
@@ -437,7 +437,7 @@ class Metadata
      *
      * @return void
      */
-    protected function defineIndex(Array $index)
+    protected function defineIndex(array $index)
     {
         $name = [!empty($index['unique']) ? 'unique' : 'index'];
         foreach ($index['key'] as $field => $asc) {
@@ -458,7 +458,7 @@ class Metadata
      *
      * @return void
      */
-    protected function processPropertyIndexes(Array $propData, Annotations $annotations)
+    protected function processPropertyIndexes(array $propData, Annotations $annotations)
     {
         $index = $annotations->getOne('index,unique');
         if (!$index) {

@@ -62,7 +62,7 @@ trait Document
      *
      * @param array $document
      */
-    public function __setLastInstance(Array $document)
+    public function __setLastInstance(array $document)
     {
         $this->__lastInstance = $document;
         if (!empty($document['_id'])) {
@@ -133,7 +133,7 @@ trait Document
      *
      * @return object
      */
-    final static function firstOrNew(Array $query)
+    final static function firstOrNew(array $query)
     {
         $doc = self::find($query)->first();
         if ($doc) {
@@ -155,7 +155,7 @@ trait Document
      *
      * @return object
      */
-    final static function firstOrCreate(Array $query)
+    final static function firstOrCreate(array $query)
     {
         $doc = self::firstOrNew($query);
         $doc->save();
@@ -243,7 +243,7 @@ trait Document
      *
      * @return object
      */
-    final static function create(Array $data)
+    final static function create(array $data)
     {
         $document = new static;
         foreach ($data as $key => $value) {
