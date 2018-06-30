@@ -443,52 +443,6 @@ class Metadata
     }
 
     /**
-     * Get the type definition from a single Annotation.
-     *
-     * @return array
-     */
-    protected function getDataTypeFromAnnotation(Annotation $annotation)
-    {
-        $type = new DataType($annotation->getName());
-
-        switch ($annotation->getName()) {
-        case 'class':
-            $type->addData('class', strtolower($annotation->getArg()));
-            break;
-        case 'array':
-            try {
-                $type->addData('element', $this->getDataTypeFromAnnotation($annotation->getArg()));
-            } catch (RuntimeException $e) {
-            }
-            break;
-        case 'reference':
-            foreach ($annotation->getArgs() as $name => $value) {
-                $type->addData($name, $value);
-            }
-            break;
-        }
-
-        return $type;
-    }
-
-    /**
-     * Returns the data type definition for a property
-     *
-     * @param Annotations $annotations  Property's annotations object
-     *
-     * @return array
-     */
-    protected function getDataType(Annotations $annotations)
-    {
-        $types = 'int,integer,float,double,array,bool,boolean,string,object,class,type,id,reference';
-        if ($annotation = $annotations->getOne($types)) {
-            return $this->getDataTypeFromAnnotation($annotation);
-        }
-
-        return new DataType;
-    }
-
-    /**
      * Processes properties
      *
      * Processes properties from a class and extracts all the metadata for future
