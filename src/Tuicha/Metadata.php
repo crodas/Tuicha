@@ -143,7 +143,7 @@ class Metadata
         }
 
         $reflection  = new ReflectionClass($this->className);
-        $this->files = [$reflection->getFileName()];
+        $this->files = [$reflection->getFileName(), __FILE__];
         $collection  = $this->getCollectionNameFromParentClasses($reflection);
         $annotations = $reflection->getAnnotations();
         $this->hasTrait = in_array(Document::class, $reflection->getTraitNames());
