@@ -53,6 +53,7 @@ use Notoj\ReflectionMethod;
 use MongoDB\BSON\ObjectID;
 use MongoDB\BSON;
 use Tuicha\Metadata\DataType;
+use Tuicha\Metadata\Property;
 
 /**
  * Metadata
@@ -174,16 +175,7 @@ class Metadata
         }
 
         if (!$this->idProperty) {
-            $definition = [
-                'annotations' => [],
-                'validations' => [],
-                'required' => false,
-                'is_public' => true,
-                'is_private' => false,
-                'type' => new DataType('id'),
-                'mongoName' => '_id',
-                'phpName' => 'id',
-            ];
+            $definition = new Property('id', '_id');
 
             $this->phpProperties['id']    = $definition;
             $this->mongoProperties['_id'] = $definition;
@@ -355,7 +347,7 @@ class Metadata
         }
 
         if ($definition) {
-            $value = $definition['type']->castValue($value);
+            $value = $definition->getType()->castValue($value);
         }
 
         if ($value instanceof BSON\Type || is_scalar($value)) {
@@ -399,40 +391,6 @@ class Metadata
         }
 
         return true;
-    }
-
-    /**
-     * Returns all the arguments from an array of annotations
-     *
-     * @param array $annotations An array of Notoj\Annotation\Annotation objects
-     *
-     * @return array
-     */
-    protected function getAnnotationArguments(array $annotations)
-    {
-        $arguments = [];
-        foreach ($annotations as $annotation) {
-            foreach ($annotation->getArgs() as $arg) {
-                $arguments[] = $arg;
-            }
-        }
-
-        foreach ($arguments as $id => $function) {
-            $args = [];
-            if ($function instanceof Annotation) {
-                $args     = $function->getArgs();
-                $function = $function->getName();
-            }
-
-            if (is_callable([Validation::class, $function])) {
-                $function = [Validation::class, $function];
-            } else if (is_string($function) && strpos($function, "::") > 0) {
-                $function = explode("::", $function, 2);
-            }
-            $arguments[$id] = [$function, $args];
-        }
-
-        return $arguments;
     }
 
     /**
@@ -546,41 +504,26 @@ class Metadata
      *
      * @return void
      */
-    protected function processProperty(ReflectionProperty $property)
+    protected function processProperty(ReflectionProperty $reflection)
     {
-        $annotations = $property->getAnnotations();
-        $phpName     = $property->getName();
-        $mongoName   = $annotations->has('field') ? $annotations->getOne('field')->getArg(0) : $phpName;
+        $property = new Property('', '', $reflection);
 
-        if (!$property->isPublic() && substr($phpName, 0, 2) === '__') {
+        if (!$property->isPublic() && substr($property->php(), 0, 2) === '__') {
             return;
         }
 
-        if ($annotations->has('id')) {
-            $mongoName = '_id';
-            $this->idProperty = $phpName;
-        }
 
-        $propData = [
-            'annotations' => [],
-            'validations' => $this->getAnnotationArguments($annotations->get('validate')),
-            'required'    => $annotations->has('required'),
-            'is_public'   => $property->isPublic(),
-            'is_private'  => $property->isPrivate(),
-            'type'        => $this->getDataType($annotations),
-            'mongoName'   => $mongoName,
-            'phpName'     => $phpName,
-        ];
-
+        /*
         $this->processPropertyIndexes($propData, $annotations);
 
         foreach ($annotations as $annotation) {
             $propData['annotations'][] = [$annotation->getName(), $annotation->getArgs()];
             $this->propertyByAnnotation[$annotation->getName()][] = $property->getName();
         }
+        */
 
-        $this->phpProperties[$phpName]     = $propData;
-        $this->mongoProperties[$mongoName] = $propData;
+        $this->phpProperties[$phpName]     = $property;
+        $this->mongoProperties[$mongoName] = $property;
     }
 
     /**
@@ -1104,38 +1047,6 @@ class Metadata
     }
 
     /**
-     * Validates a property's value
-     *
-     * @param string $property      Property name
-     * @param mixed  $value         Property value
-     * @param array  $definition    Property definition*
-     *
-     * @return mixed
-     */
-    protected function validate($property, $value, $definition)
-    {
-        if (empty($value) && $definition['required']) {
-            throw new UnexpectedValueException("Unexpected empty value for property $property");
-        } else if ($value && !empty($definition['validations'])) {
-            foreach ($definition['validations'] as $validation) {
-                $response = true;
-                if (is_array($validation[0])) {
-                    list($class, $method) = $validation[0];
-                    $response = $class::$method($value, $validation[1]);
-                } else if (is_callable($validation[0])) {
-                    $response = $validation[0]($value, $validation[1]);
-                }
-
-                if (!$response) {
-                    throw new UnexpectedValueException("Invalid value for $property ($value)");
-                }
-            }
-        }
-
-        return $value;
-    }
-
-    /**
      * Returns a document which represents the current object state.
      *
      * @param object $object
@@ -1154,26 +1065,15 @@ class Metadata
             return $object->bsonSerialize();
         }
 
-        foreach ($this->phpProperties as $key => $definition) {
-            $mongo = $definition['mongoName'];
+        foreach ($this->phpProperties as $key => $property) {
+            $value = $property->getValue($object);
 
-            if ($definition['is_public']) {
-                if (empty($keys[$key])) {
-                    continue;
-                }
-                $php   = $definition['phpName'];
-                $value = $object->$php;
-            } else {
-                $property = new ReflectionProperty($this->className, $key);
-                $property->setAccessible(true);
-                $value = $property->getValue($object);
-            }
-
-            if (!$this->serializeValue($key, $definition, $value, $validate)) {
+            if (!$this->serializeValue($key, $property, $value, $validate)) {
                 continue;
             }
 
-            $array[$mongo] = $validate ? $this->validate($key, $value, $definition) : $value;
+            $mongo = $property->mongo();
+            $array[$mongo] = $validate ? $property->validate($value) : $value;
         }
 
         foreach (get_object_vars($object) as $key => $value) {
@@ -1191,14 +1091,7 @@ class Metadata
 
         if (empty($array['_id']) && $generateId) {
             $array['_id'] = new ObjectID;
-            $id = $this->phpProperties[$this->idProperty];
-            if ($id['is_public']) {
-                $object->{$this->idProperty} = $array['_id'];
-            } else {
-                $property = new ReflectionProperty($object, $this->idProperty);
-                $property->setAccessible(true);
-                $property->setValue($object, $array['_id']);
-            }
+            $this->phpProperties[$this->idProperty]->setValue($object, $array['_id']);
         }
 
         return $array;
