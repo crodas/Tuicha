@@ -179,7 +179,7 @@ class Metadata
                 'required' => false,
                 'is_public' => true,
                 'is_private' => false,
-                'type' => 'id',
+                'type' => ['type' => 'id'],
                 'mongoName' => '_id',
                 'phpName' => 'id',
             ];
@@ -353,7 +353,17 @@ class Metadata
             return true;
         }
 
-        if (!empty($definition['type']['type']) && !in_array($definition['type']['type'], ['reference', 'class'])) {
+        $typeCast = [
+            "boolean", "bool",
+            "integer", "int",
+            "float", "double",
+            "string",
+            "array",
+            "object",
+            "null",
+        ];
+
+        if ($definition && in_array($definition['type']['type'], $typeCast)) {
             settype($value, $definition['type']['type']);
         }
 
@@ -372,7 +382,7 @@ class Metadata
             if (!empty($definition['type']['element'])) {
                 $childDefinition['type'] = $definition['type']['element'];
             } else {
-                $childDefinition['type'] = [];
+                $childDefinition['type'] = ['type' => ''];
             }
 
             foreach ($value as $key => $val) {
@@ -496,9 +506,6 @@ class Metadata
         $type = ['type' => $annotation->getName()];
 
         switch ($annotation->getName()) {
-        case 'id':
-            $type = 'id';
-            break;
         case 'class':
             $type['class'] = $annotation->getArg();
             break;
@@ -514,6 +521,12 @@ class Metadata
             break;
         case 'type':
             $type = $annotation->getArgs();
+            foreach (['class', 'array', 'reference'] as $possibleType) {
+                if (!empty($type[$possibleType])) {
+                    $type['type'] = $possibleType;
+                    break;
+                }
+            }
             break;
         }
 
@@ -534,7 +547,7 @@ class Metadata
             return $this->getDataTypeFromAnnotation($annotation);
         }
 
-        return [];
+        return ['type' => ''];
     }
 
     /**
@@ -830,9 +843,10 @@ class Metadata
             return Metadata::of($type['class'])->newInstance((array)$document, $isNested);
         }
 
-        if (!empty($type['type']) && $type['type'] === 'array' && !empty($type['element'])) {
-            foreach ($document as $id => $value) {
-                $document[$id] = $this->hydratate(['type' => $type['element']], $value);
+        if ($type['type'] === 'array' && !empty($type['element']) || is_array($document)) {
+            $elementType = empty($type['element']) ? $type : ['type' => $type['element']];
+            foreach ((array)$document as $id => $value) {
+                $document[$id] = $this->hydratate($elementType, $value);
             }
         }
 
@@ -858,18 +872,10 @@ class Metadata
         }
 
         if (!empty($value['$ref']) && !empty($value['$id'])) {
-            $value = new Reference($value, !empty($prop['type']['readonly']));
-        } else if (!empty($prop['type'])) {
-            $value = $this->newInstanceByType($prop['type'], $value, true);
-        } else if (!empty($value['__type'])) {
-            $value = $this->newInstanceByType($value['__type'], $value, true);
-        } else if (is_array($value)) {
-            foreach ($value as $k => $v) {
-                $value[$k] = $this->hydratate($prop, $v);
-            }
+            return new Reference($value, !empty($prop['type']['readonly']));
         }
 
-        return $value;
+        return $this->newInstanceByType(!empty($value['__type']) ? $value['__type'] : $prop['type'], $value, true);
     }
 
     /**

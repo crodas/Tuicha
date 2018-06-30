@@ -24,7 +24,7 @@ class User
     /** @Array(@Int) */
     public $karma;
 
-    /** @reference(with=['email']) */
+    /** @reference(with=['email'], readonly=true) */
     public $ref;
 
     /**  @class(User::class) */
