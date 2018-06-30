@@ -419,7 +419,7 @@ class Metadata
      *
      * @return void
      */
-    protected function processPropertyIndexes(array $propData, Annotations $annotations)
+    protected function processPropertyIndexes(Property $property, Annotations $annotations)
     {
         $index = $annotations->getOne('index,unique');
         if (!$index) {
@@ -435,7 +435,7 @@ class Metadata
             $order = empty($args['desc']) ? 1 : -1;
         }
         $this->defineIndex([
-            'key' => [$propData['mongoName'] => $order],
+            'key' => [$property->mongo() => $order],
             'unique' => $index->getName() === 'unique',
             'sparse' => !empty($args['sparse']),
             'background' => true,
@@ -512,18 +512,21 @@ class Metadata
             return;
         }
 
+        $this->processPropertyIndexes($property, $reflection->getAnnotations());
 
         /*
-        $this->processPropertyIndexes($propData, $annotations);
-
         foreach ($annotations as $annotation) {
             $propData['annotations'][] = [$annotation->getName(), $annotation->getArgs()];
             $this->propertyByAnnotation[$annotation->getName()][] = $property->getName();
         }
         */
 
-        $this->phpProperties[$phpName]     = $property;
-        $this->mongoProperties[$mongoName] = $property;
+        $this->phpProperties[$property->php()]     = $property;
+        $this->mongoProperties[$property->mongo()] = $property;
+
+        if ($property->getType()->is('id')) {
+            $this->idProperty  = $property->php();
+        }
     }
 
     /**
@@ -799,8 +802,7 @@ class Metadata
             return new Reference($value, !empty($prop['type']->getData('readonly')));
         }
 
-        $type = $prop ? $prop['type'] : new DataType;
-        $type = !empty($value['__class']) ? new DataType('class', ['class' => $value['__class']]) : $type;
+        $type = !empty($value['__class']) ? new DataType('class', ['class' => $value['__class']]) : $prop->getType();
         unset($value['__class']);
 
         return $this->newInstanceByType($type, $value, true);
@@ -828,21 +830,11 @@ class Metadata
         }
         $object = $reflections[$_class]->newInstanceWithoutConstructor();
         foreach ($document as $key => $value) {
-            $prop = null;
+            $prop = new Property($key);
             if (!empty($this->phpProperties[$key]) ||  !empty($this->mongoProperties[$key])) {
                 $prop = !empty($this->mongoProperties[$key]) ? $this->mongoProperties[$key] : $this->phpProperties[$key];
-                $key  = $prop['phpName'];
             }
-
-            $value = is_scalar($value) ? $value : $this->hydratate($prop, $value);
-
-            if (!$prop || $prop['is_public']) {
-                $object->$key = $value;
-            } else {
-                $property = new ReflectionProperty($this->className, $key);
-                $property->setAccessible(true);
-                $property->setValue($object, $value);
-            }
+            $prop->setValue($object, is_scalar($value) ? $value : $this->hydratate($prop, $value));
         }
 
         if (!$isNested) {
@@ -915,13 +907,7 @@ class Metadata
      */
     public function getId($object)
     {
-        $id = $this->phpProperties[$this->idProperty];
-        if ($id['is_public']) {
-            return $object->{$id['phpName']};
-        }
-
-        $property = new ReflectionProperty($this->className, $id['phpName']);
-        $property->setAccessible(true);
+        $property = $this->phpProperties[$this->idProperty];
         return $property->getValue($object);
     }
 
