@@ -147,7 +147,7 @@ class Reference implements Serializable
     public function __get($name)
     {
         $property= !empty($this->properties[$name]) ? $this->properties[$name] : null;
-        if ($property && $property['type']['type'] === 'id') {
+        if ($property && $property['type']->is('id')) {
             // there is no need to load the referenced object
             // to return its ID
             return $this->id;

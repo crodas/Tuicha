@@ -587,7 +587,7 @@ abstract class Filter
         }
 
         if (!$metadata->hasOwnCollection()) {
-            $query['__type'] = ['class' => $metadata->getClassName()];
+            $query['__class'] = $metadata->getClassName();
         }
 
         return $this->normalizeDataTypes($query);

@@ -52,6 +52,7 @@ use Notoj\ReflectionProperty;
 use Notoj\ReflectionMethod;
 use MongoDB\BSON\ObjectID;
 use MongoDB\BSON;
+use Tuicha\Metadata\DataType;
 
 /**
  * Metadata
@@ -179,7 +180,7 @@ class Metadata
                 'required' => false,
                 'is_public' => true,
                 'is_private' => false,
-                'type' => ['type' => 'id'],
+                'type' => new DataType('id'),
                 'mongoName' => '_id',
                 'phpName' => 'id',
             ];
@@ -353,18 +354,8 @@ class Metadata
             return true;
         }
 
-        $typeCast = [
-            "boolean", "bool",
-            "integer", "int",
-            "float", "double",
-            "string",
-            "array",
-            "object",
-            "null",
-        ];
-
-        if ($definition && in_array($definition['type']['type'], $typeCast)) {
-            settype($value, $definition['type']['type']);
+        if ($definition) {
+            $value = $definition['type']->castValue($value);
         }
 
         if ($value instanceof BSON\Type || is_scalar($value)) {
@@ -378,12 +369,9 @@ class Metadata
 
         if (is_array($value)) {
             // Change the data type for the element
-            $childDefinition = [];
-            if (!empty($definition['type']['element'])) {
-                $childDefinition['type'] = $definition['type']['element'];
-            } else {
-                $childDefinition['type'] = ['type' => ''];
-            }
+            $childDefinition = [
+                'type' => $definition ? $definition['type']->getData('element', new DataType) : new DataType,
+            ];
 
             foreach ($value as $key => $val) {
                 $this->serializeValue($propertyName, $childDefinition, $val, $validate);
@@ -394,19 +382,19 @@ class Metadata
         if (is_object($value)) {
             $class = strtolower(get_class($value));
             $meta  = Metadata::of($class);
-            if (!empty($definition['type']['type']) && $definition['type']['type'] === 'reference') {
-                $with = [];
-                if (!empty($definition['type']['with'])) {
-                    $with = (array) $definition['type']['with'];
-                }
-                $value = $meta->makeReference($this->save($value), $with, !empty($definition['type']['readonly']));
+            if ($definition && $definition['type']->is('reference')) {
+                $value = $meta->makeReference(
+                    $this->save($value),
+                    $definition['type']->getData('with', []),
+                    $definition['type']->getData('readonly')
+                );
                 return true;
             }
 
             $value = $meta->toDocument($value, $validate);
-            if (!$definition || empty($definition['type']['class']) || strtolower($definition['type']['class']) !== $class) {
+            if (!$definition || $definition['type']->getData('class') !== $class) {
                 // Tuicha must save the object class name to be able to populate it back.
-                $value['__type'] = compact('class');
+                $value['__class'] = $class;
             }
         }
 
@@ -503,29 +491,21 @@ class Metadata
      */
     protected function getDataTypeFromAnnotation(Annotation $annotation)
     {
-        $type = ['type' => $annotation->getName()];
+        $type = new DataType($annotation->getName());
 
         switch ($annotation->getName()) {
         case 'class':
-            $type['class'] = $annotation->getArg();
+            $type->addData('class', strtolower($annotation->getArg()));
             break;
         case 'array':
             try {
-                $arg = $annotation->getArg();
-                $type['element'] = $this->getDataTypeFromAnnotation($arg);
+                $type->addData('element', $this->getDataTypeFromAnnotation($annotation->getArg()));
             } catch (RuntimeException $e) {
             }
             break;
         case 'reference':
-            $type = array_merge($annotation->getArgs(), $type);
-            break;
-        case 'type':
-            $type = $annotation->getArgs();
-            foreach (['class', 'array', 'reference'] as $possibleType) {
-                if (!empty($type[$possibleType])) {
-                    $type['type'] = $possibleType;
-                    break;
-                }
+            foreach ($annotation->getArgs() as $name => $value) {
+                $type->addData($name, $value);
             }
             break;
         }
@@ -547,7 +527,7 @@ class Metadata
             return $this->getDataTypeFromAnnotation($annotation);
         }
 
-        return ['type' => ''];
+        return new DataType;
     }
 
     /**
@@ -671,7 +651,7 @@ class Metadata
      * Returns TRUE if this class is defined a SingleCollection
      *
      * If Single Collections is true, all child-classes will be stored in the same
-     * collection. Tupa will store the class name in the `__type` property.
+     * collection. Tupa will store the class name in the `__class` property.
      *
      * @return bool
      */
@@ -837,18 +817,19 @@ class Metadata
      *
      * @return object
      */
-    protected function newInstanceByType($type, $document, $isNested = false)
+    protected function newInstanceByType(DataType $type, $document, $isNested = false)
     {
-        if (!empty($type['class']) && $document) {
-            return Metadata::of($type['class'])->newInstance((array)$document, $isNested);
+        if ($type->is('class') && $document) {
+            return Metadata::of($type->getData('class'))->newInstance((array)$document, $isNested);
         }
 
-        if ($type['type'] === 'array' && !empty($type['element']) || is_array($document)) {
-            $elementType = empty($type['element']) ? $type : ['type' => $type['element']];
+        if ($type->is('array') || is_array($document)) {
+            $elementType = ['type' => $type->getData('element', $type)];
             foreach ((array)$document as $id => $value) {
                 $document[$id] = $this->hydratate($elementType, $value);
             }
         }
+
 
         return $document;
     }
@@ -872,10 +853,14 @@ class Metadata
         }
 
         if (!empty($value['$ref']) && !empty($value['$id'])) {
-            return new Reference($value, !empty($prop['type']['readonly']));
+            return new Reference($value, !empty($prop['type']->getData('readonly')));
         }
 
-        return $this->newInstanceByType(!empty($value['__type']) ? $value['__type'] : $prop['type'], $value, true);
+        $type = $prop ? $prop['type'] : new DataType;
+        $type = !empty($value['__class']) ? new DataType('class', ['class' => $value['__class']]) : $type;
+        unset($value['__class']);
+
+        return $this->newInstanceByType($type, $value, true);
     }
 
     /**
@@ -893,7 +878,7 @@ class Metadata
     {
         static $reflections = [];
 
-        $class  = empty($document['__type']['class']) ? $this->className : $document['__type']['class'];
+        $class  = empty($document['__class']) ? $this->className : $document['__class'];
         $_class = strtolower($class);
         if (empty($reflections[$_class])) {
             $reflections[$_class] = new ReflectionClass($class);
@@ -1201,7 +1186,7 @@ class Metadata
         }
 
         if (!$this->hasOwnCollection) {
-            $array['__type'] = ['class' => $this->className];
+            $array['__class'] = $this->className;
         }
 
         if (empty($array['_id']) && $generateId) {

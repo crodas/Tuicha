@@ -11,7 +11,7 @@ class demo1 {
     /** @Id */
     public $id;
 
-    /** @Type(class="demo2") */
+    /** @Class(demo2) */
     protected $bar;
 
     public function getBar()
