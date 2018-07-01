@@ -1048,8 +1048,8 @@ class Metadata
     {
         if (!empty($this->phpProperties[$property])) {
             return $this->phpProperties[$property]->getValue($object);
-        } else if (!empty($object->$property)) {
-            $value = $object->$property;
+        } else if (array_key_exists($property, (array)$object)) {
+            return $object->$property;
         }
 
         return null;
