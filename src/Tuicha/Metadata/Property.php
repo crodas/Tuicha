@@ -11,13 +11,9 @@ class Property
 {
     protected $phpName;
     protected $mongoName;
-    
     protected $annotations = [];
-
     protected $validations = [];
-
     protected $type;
-
     protected $required = false;
     protected $isPublic = true;
 
@@ -82,22 +78,6 @@ class Property
         return $arguments;
     }
 
-
-    public function mongo()
-    {
-        return $this->mongoName;
-    }
-
-    public function php()
-    {
-        return $this->phpName;
-    }
-    
-    public function isPublic()
-    {
-        return $this->isPublic;
-    }
-
     /**
      * Get the type definition from a single Annotation.
      *
@@ -144,9 +124,30 @@ class Property
         return $this->mongoName === '_id' ?  new DataType('id') : $this->type;
     }
 
+    public function mongo()
+    {
+        return $this->mongoName;
+    }
+
+    public function php()
+    {
+        return $this->phpName;
+    }
+
+    public function isPublic()
+    {
+        return $this->isPublic;
+    }
+
     public function getType()
     {
         return $this->type;
+    }
+
+    public function setType(DataType $type)
+    {
+        $this->type = $type;
+        return $this;
     }
 
     public function getValue($object)
@@ -154,7 +155,7 @@ class Property
         if ($this->isPublic) {
             return $object->{$this->phpName};
         }
-        
+
         $reflection = new ReflectionProperty($object, $this->phpName);
         $reflection->setAccessible(true);
         return $reflection->getValue($object);

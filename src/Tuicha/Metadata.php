@@ -361,9 +361,7 @@ class Metadata
 
         if (is_array($value)) {
             // Change the data type for the element
-            $childDefinition = [
-                'type' => $definition ? $definition['type']->getData('element', new DataType) : new DataType,
-            ];
+            $childDefinition = (new Property(''))->setType($definition ? $definition->getType()->getData('element', new DataType) : new DataType);
 
             foreach ($value as $key => $val) {
                 $this->serializeValue($propertyName, $childDefinition, $val, $validate);
@@ -374,17 +372,17 @@ class Metadata
         if (is_object($value)) {
             $class = strtolower(get_class($value));
             $meta  = Metadata::of($class);
-            if ($definition && $definition['type']->is('reference')) {
+            if ($definition && $definition->getType()->is('reference')) {
                 $value = $meta->makeReference(
                     $this->save($value),
-                    $definition['type']->getData('with', []),
-                    $definition['type']->getData('readonly')
+                    $definition->getType()->getData('with', []),
+                    $definition->getType()->getData('readonly')
                 );
                 return true;
             }
 
             $value = $meta->toDocument($value, $validate);
-            if (!$definition || $definition['type']->getData('class') !== $class) {
+            if (!$definition || $definition->getType()->getData('class') !== $class) {
                 // Tuicha must save the object class name to be able to populate it back.
                 $value['__class'] = $class;
             }
