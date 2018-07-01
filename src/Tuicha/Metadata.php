@@ -364,7 +364,7 @@ class Metadata
             $childDefinition = (new Property(''))->setType($definition ? $definition->getType()->getData('element', new DataType) : new DataType);
 
             foreach ($value as $key => $val) {
-                $this->serializeValue($propertyName, $val, $childDefintion, $validate);
+                $this->serializeValue($propertyName, $val, $childDefinition, $validate);
                 $value[$key] = $val;
             }
         }
