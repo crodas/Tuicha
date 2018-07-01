@@ -113,5 +113,16 @@ class MetadataTest extends PHPUnit\Framework\TestCase
         $this->assertTrue(is_array($properties));
         $this->assertFalse(empty($properties));
         $this->assertTrue(array_key_exists('name', $properties));
+        $properties = User::getTuichaMetadata()->getPropertiesByAnnotation('@requiredxxxo');
+        $this->assertEquals([], $properties);
+    }
+
+    public function testgetPropertyValue()
+    {
+        $user = new User;
+        $user->xxx = false;
+        $meta = User::getTuichaMetadata();
+        $this->assertEquals($user->xxx, $meta->getPropertyValue($user, 'xxx'));
+        $this->assertNull($meta->getPropertyValue($user, 'yyy'));
     }
 }
