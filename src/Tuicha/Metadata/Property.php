@@ -5,6 +5,8 @@ namespace Tuicha\Metadata;
 use Notoj\Annotation\Annotation;
 use Notoj\Annotation\Annotations;
 use Notoj\ReflectionProperty;
+use Tuicha\Validation;
+use UnexpectedValueException;
 use RuntimeException;
 
 class Property
@@ -181,10 +183,10 @@ class Property
      */
     public function validate($value)
     {
-        if (empty($value) && $definition['required']) {
+        if (empty($value) && $this->required) {
             throw new UnexpectedValueException("Unexpected empty value for property {$this->phpName}");
-        } else if ($value && !empty($definition['validations'])) {
-            foreach ($definition['validations'] as $validation) {
+        } else if ($value && !empty($this->validations)) {
+            foreach ($this->validations as $validation) {
                 $response = true;
                 if (is_array($validation[0])) {
                     list($class, $method) = $validation[0];

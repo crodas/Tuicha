@@ -382,7 +382,6 @@ class Metadata
             }
 
             $value = $meta->toDocument($value, $validate);
-            var_dump($value);
             if (!$definition || $definition->getType()->getData('class') !== $class) {
                 // Tuicha must save the object class name to be able to populate it back.
                 $value['__class'] = $class;
@@ -467,12 +466,9 @@ class Metadata
 
         $this->processPropertyIndexes($property, $reflection->getAnnotations());
 
-        /*
-        foreach ($annotations as $annotation) {
-            $propData['annotations'][] = [$annotation->getName(), $annotation->getArgs()];
-            $this->propertyByAnnotation[$annotation->getName()][] = $property->getName();
+        foreach ($reflection->getAnnotations() as $annotation) {
+            $this->propertyByAnnotation[$annotation->getName()][] = $property->php();
         }
-        */
 
         $this->phpProperties[$property->php()]     = $property;
         $this->mongoProperties[$property->mongo()] = $property;
@@ -723,7 +719,7 @@ class Metadata
         }
 
         if ($type->is('array') || is_array($document)) {
-            $elementType = ['type' => $type->getData('element', $type)];
+            $elementType = (new Property(''))->setType($type->getData('element', $type));
             foreach ((array)$document as $id => $value) {
                 $document[$id] = $this->hydratate($elementType, $value);
             }
@@ -752,7 +748,7 @@ class Metadata
         }
 
         if (!empty($value['$ref']) && !empty($value['$id'])) {
-            return new Reference($value, !empty($prop['type']->getData('readonly')));
+            return new Reference($value, !empty($prop->getType()->getData('readonly')));
         }
 
         $type = !empty($value['__class']) ? new DataType('class', ['class' => $value['__class']]) : $prop->getType();
@@ -783,10 +779,12 @@ class Metadata
         }
         $object = $reflections[$_class]->newInstanceWithoutConstructor();
         foreach ($document as $key => $value) {
-            $prop = new Property($key);
             if (!empty($this->phpProperties[$key]) ||  !empty($this->mongoProperties[$key])) {
                 $prop = !empty($this->mongoProperties[$key]) ? $this->mongoProperties[$key] : $this->phpProperties[$key];
+            } else {
+                $prop = new Property($key);
             }
+
             $prop->setValue($object, is_scalar($value) ? $value : $this->hydratate($prop, $value));
         }
 
@@ -1031,6 +1029,8 @@ class Metadata
         if (empty($array['_id']) && $generateId) {
             $array['_id'] = new ObjectID;
             $this->phpProperties[$this->idProperty]->setValue($object, $array['_id']);
+        } else if (empty($array['_id']) && array_key_exists('_id', $array)) {
+            unset($array['_id']);
         }
 
         return $array;
@@ -1046,21 +1046,13 @@ class Metadata
      */
     public function getPropertyValue($object, $property)
     {
-        $value = null;
         if (!empty($this->phpProperties[$property])) {
-            $definition = $this->phpProperties[$property];
-            if ($definition['is_public']) {
-                $php   = $definition['phpName'];
-                $value = $object->$php;
-            } else {
-                $property = new ReflectionProperty($this->className, $property);
-                $property->setAccessible(true);
-                $value = $property->getValue($object);
-            }
+            return $this->phpProperties[$property]->getValue($object);
         } else if (!empty($object->$property)) {
             $value = $object->$property;
         }
-        return $value;
+
+        return null;
     }
 
 }
