@@ -382,6 +382,7 @@ class Metadata
             }
 
             $value = $meta->toDocument($value, $validate);
+            var_dump($value);
             if (!$definition || $definition->getType()->getData('class') !== $class) {
                 // Tuicha must save the object class name to be able to populate it back.
                 $value['__class'] = $class;
