@@ -329,13 +329,13 @@ class Metadata
      *   5. Any object is serialized with their own Metadata object (Metadata::serializeValue)
      *
      * @param string $propertyName  Property name
-     * @param array  $definition    Proprety definition
      * @param mixed  &$value        Value to serialize. It is by reference, it is OK to edit it in place.
+     * @param Property $definition  Proprety definition
      * @param boolean $validate     Whether or not to validate
      *
      * @return boolean TRUE if the property was serialized, FALSE if it should be ignored.
      */
-    protected function serializeValue($propertyName, $definition, &$value, $validate = true)
+    protected function serializeValue($propertyName, &$value, Property $definition = null, $validate = true)
     {
         if (substr($propertyName, 0, 2) === '__' || is_resource($value)) {
             return false;
@@ -364,7 +364,7 @@ class Metadata
             $childDefinition = (new Property(''))->setType($definition ? $definition->getType()->getData('element', new DataType) : new DataType);
 
             foreach ($value as $key => $val) {
-                $this->serializeValue($propertyName, $childDefinition, $val, $validate);
+                $this->serializeValue($propertyName, $val, $childDefintion, $validate);
                 $value[$key] = $val;
             }
         }
@@ -1005,7 +1005,7 @@ class Metadata
         foreach ($this->phpProperties as $key => $property) {
             $value = $property->getValue($object);
 
-            if (!$this->serializeValue($key, $property, $value, $validate)) {
+            if (!$this->serializeValue($key, $value, $property, $validate)) {
                 continue;
             }
 
@@ -1015,7 +1015,7 @@ class Metadata
 
         foreach (get_object_vars($object) as $key => $value) {
             if (empty($this->phpProperties[$key]) && empty($this->mongoProperties[$key])) {
-                if (!$this->serializeValue($key, [], $value, $validate)) {
+                if (!$this->serializeValue($key, $value, null, $validate)) {
                     continue;
                 }
                 $array[$key] = $value;
