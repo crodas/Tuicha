@@ -61,6 +61,16 @@ class DataType
     }
 
     /**
+     * Returns the type name
+     *
+     * @return string
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /**
      * Adds more data to this data type object.
      *
      * @return self
