@@ -13,6 +13,7 @@ class Property
 {
     protected $phpName;
     protected $mongoName;
+    protected $isDefined = false;
     protected $annotations = [];
     protected $validations = [];
     protected $type;
@@ -26,7 +27,8 @@ class Property
         $this->type      = $this->type ?: new DataType($mongoName === '_id' ? 'id' : '');
 
         if ($reflection) {
-            $annotations = $reflection->getAnnotations();
+            $this->isDefined = true;
+            $annotations     = $reflection->getAnnotations();
             $this->phpName   = $reflection->getName();
             $this->mongoName = $annotations->has('field') ? $annotations->getOne('field')->getArg(0) : $this->phpName;
             if ($annotations->has('id')) {
@@ -155,12 +157,21 @@ class Property
     public function getValue($object)
     {
         if ($this->isPublic) {
-            return $object->{$this->phpName};
+            if ($this->isDefined || array_key_exists($this->phpName, (array)$object)) {
+                return $object->{$this->phpName};
+            }
+
+            return null;
         }
 
         $reflection = new ReflectionProperty($object, $this->phpName);
         $reflection->setAccessible(true);
         return $reflection->getValue($object);
+    }
+
+    public function hasValue($object)
+    {
+        return ! $this->isPublic || $this->isDefined || array_key_exists($this->phpName, (array)$object);
     }
 
     public function setValue($object, $value)

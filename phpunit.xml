@@ -14,7 +14,7 @@
     stopOnIncomplete            = "true"
     stopOnSkipped               = "ture"
     syntaxCheck                 = "true"
-    strict                      = "false"
+    strict                      = "true"
     verbose                     = "true"
     debug                       = "true"
     bootstrap                   = "tests/bootstrap.php" >

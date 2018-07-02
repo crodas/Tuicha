@@ -1005,7 +1005,7 @@ class Metadata
         foreach ($this->phpProperties as $key => $property) {
             $value = $property->getValue($object);
 
-            if (!$this->serializeValue($key, $value, $property, $validate)) {
+            if (!$property->hasValue($object) || !$this->serializeValue($key, $value, $property, $validate)) {
                 continue;
             }
 
@@ -1029,8 +1029,6 @@ class Metadata
         if (empty($array['_id']) && $generateId) {
             $array['_id'] = new ObjectID;
             $this->phpProperties[$this->idProperty]->setValue($object, $array['_id']);
-        } else if (empty($array['_id']) && array_key_exists('_id', $array)) {
-            unset($array['_id']);
         }
 
         return $array;
