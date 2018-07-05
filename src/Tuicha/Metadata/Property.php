@@ -14,7 +14,7 @@ class Property
     protected $phpName;
     protected $mongoName;
     protected $isDefined = false;
-    protected $annotations = [];
+    protected $annotations;
     protected $validations = [];
     protected $type;
     protected $required = false;
@@ -27,25 +27,42 @@ class Property
         $this->type      = $this->type ?: new DataType($mongoName === '_id' ? 'id' : '');
 
         if ($reflection) {
-            $this->isDefined = true;
-            $annotations     = $reflection->getAnnotations();
-            $this->phpName   = $reflection->getName();
-            $this->mongoName = $annotations->has('field') ? $annotations->getOne('field')->getArg(0) : $this->phpName;
-            if ($annotations->has('id')) {
+            $this->isDefined   = true;
+            $this->annotations = $reflection->getAnnotations();
+            $this->phpName     = $reflection->getName();
+            $this->mongoName   = $this->annotations->has('field') ? $this->annotations->getOne('field')->getArg(0) : $this->phpName;
+            if ($this->annotations->has('id')) {
                 $this->mongoName = '_id';
             }
 
-            $this->parseReflection($reflection, $annotations);
+            $this->parseReflection($reflection);
         }
     }
 
-    public function parseReflection(ReflectionProperty $reflection, Annotations $annotations)
+    /**
+     * __sleep()
+     *
+     * Serializes the annotations property to speedup the wakeup process. The annotations
+     * is unserialized on demand by the `getAnnotations()` method
+     *
+     * @return array
+     */
+    public function __sleep()
+    {
+        if (!is_string($this->annotations)) {
+            $this->annotations = serialize($this->annotations);
+        }
+
+        return array_keys((array)$this);
+    }
+
+    public function parseReflection(ReflectionProperty $reflection)
     {
 
         $this->isPublic    = $reflection->isPublic();
-        $this->required    = $annotations->has('required');
-        $this->validations = $this->getAnnotationArguments($annotations->get('validate'));
-        $this->type        = $this->parseDataType($annotations);
+        $this->required    = $this->annotations->has('required');
+        $this->validations = $this->getAnnotationArguments($this->annotations->get('validate'));
+        $this->type        = $this->parseDataType();
     }
 
     /**
@@ -118,42 +135,89 @@ class Property
      *
      * @return array
      */
-    protected function parseDataType(Annotations $annotations)
+    protected function parseDataType()
     {
         $types = 'int,integer,float,double,array,bool,boolean,string,object,class,type,id,reference';
-        if ($annotation = $annotations->getOne($types)) {
+        if ($annotation = $this->annotations->getOne($types)) {
             return $this->getDataTypeFromAnnotation($annotation);
         }
 
         return $this->mongoName === '_id' ?  new DataType('id') : $this->type;
     }
 
+    /**
+     * Returns the Mongo name of this property
+     *
+     * @return string
+     */
     public function mongo()
     {
         return $this->mongoName;
     }
 
+    /**
+     * Returns the PHP name of this property
+     *
+     * @return string
+     */
     public function php()
     {
         return $this->phpName;
     }
 
+    /**
+     * Returns if this property is public or not.
+     *
+     * @return bool
+     */
     public function isPublic()
     {
         return $this->isPublic;
     }
 
+    /**
+     * Returns the annotations object
+     *
+     * @return Notoj\Annotation\Annotations|null
+     */
+    public function getAnnotations()
+    {
+        if (is_string($this->annotations)) {
+            $this->annotations = unserialize($this->annotations);
+        }
+        return $this->annotations;
+    }
+
+    /**
+     * Returns the DataType of the property
+     *
+     * @return Tuicha\Metadata\DataType
+     */
     public function getType()
     {
         return $this->type;
     }
 
+    /**
+     * Changes the DataType of this property
+     *
+     * @param Tuicha\Metadata\DataType $type
+     *
+     * @return $this
+     */
     public function setType(DataType $type)
     {
         $this->type = $type;
         return $this;
     }
 
+    /**
+     * Get the property value of a given object
+     *
+     * @param $object   Object to get the value from
+     *
+     * @return mixed
+     */
     public function getValue($object)
     {
         if ($this->isPublic) {
@@ -169,11 +233,24 @@ class Property
         return $reflection->getValue($object);
     }
 
+    /**
+     * Checks if a given object has a property
+     *
+     * @param $object   Object to get the value from
+     *
+     * @return bool
+     */
     public function hasValue($object)
     {
         return ! $this->isPublic || $this->isDefined || array_key_exists($this->phpName, (array)$object);
     }
 
+    /**
+     * Sets a value on the property of a given object
+     *
+     * @param $object   Object to set the property
+     * @param $value    Value to set
+     */
     public function setValue($object, $value)
     {
         if ($this->isPublic) {
