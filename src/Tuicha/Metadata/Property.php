@@ -38,6 +38,9 @@ class Property
             }
 
             $this->parseReflection($reflection);
+        } else {
+            // create empty annotation object
+            $this->annotations = new Annotations;
         }
     }
 
@@ -183,7 +186,7 @@ class Property
     /**
      * Returns the annotations object
      *
-     * @return Notoj\Annotation\Annotations|null
+     * @return Notoj\Annotation\Annotations
      */
     public function getAnnotations()
     {

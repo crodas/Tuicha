@@ -132,8 +132,33 @@ class MetadataTest extends PHPUnit\Framework\TestCase
     public function testInvalidArgumentPropertyValue()
     {
         $meta = User::getTuichaMetadata();
+        $meta->getPropertyValue(new stdclass, 'xxx');
+    }
+
+    public function testGetType()
+    {
+        $meta = User::getTuichaMetadata();
         foreach ($meta->getProperties() as $prop) {
-            $prop->getValue(new stdclass, 'xxx');
+            if ($prop->mongo() === '_id') {
+                $this->assertEquals('id', $prop->getType()->getType());
+                break;
+            }
+        }
+    }
+
+    public function testGetAnnotation()
+    {
+        $meta = User::getTuichaMetadata();
+        foreach ($meta->getProperties() as $prop) {
+            switch ($prop->mongo()) {
+            case '_id':
+                // the _id property has no annotations
+                $this->assertFalse($prop->getAnnotations()->has('id'));
+                break;
+            case 'email':
+                $this->assertTrue($prop->getAnnotations()->has('unique'));
+                break;
+            }
         }
     }
 }
