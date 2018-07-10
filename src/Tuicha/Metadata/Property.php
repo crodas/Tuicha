@@ -218,7 +218,7 @@ class Property
      *
      * @return mixed
      */
-    public function getValue($object)
+    public function getValue(object $object)
     {
         if ($this->isPublic) {
             if ($this->isDefined || array_key_exists($this->phpName, (array)$object)) {
@@ -240,7 +240,7 @@ class Property
      *
      * @return bool
      */
-    public function hasValue($object)
+    public function hasValue(object $object)
     {
         return ! $this->isPublic || $this->isDefined || array_key_exists($this->phpName, (array)$object);
     }
@@ -251,7 +251,7 @@ class Property
      * @param $object   Object to set the property
      * @param $value    Value to set
      */
-    public function setValue($object, $value)
+    public function setValue(object $object, $value)
     {
         if ($this->isPublic) {
             $object->{$this->phpName} = $value;
