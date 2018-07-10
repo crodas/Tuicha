@@ -226,7 +226,7 @@ class Property
      *
      * @return mixed
      */
-    public function getValue(object $object)
+    public function getValue($object)
     {
         $this->metadata->ensureObjectType($object);
         if ($this->isPublic) {
@@ -249,7 +249,7 @@ class Property
      *
      * @return bool
      */
-    public function hasValue(object $object)
+    public function hasValue($object)
     {
         $this->metadata->ensureObjectType($object);
         return ! $this->isPublic || $this->isDefined || array_key_exists($this->phpName, (array)$object);
