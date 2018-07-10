@@ -125,4 +125,15 @@ class MetadataTest extends PHPUnit\Framework\TestCase
         $this->assertEquals($user->xxx, $meta->getPropertyValue($user, 'xxx'));
         $this->assertNull($meta->getPropertyValue($user, 'yyy'));
     }
+
+    /**
+     * @expectedException InvalidArgumentException
+     */
+    public function testInvalidArgumentPropertyValue()
+    {
+        $meta = User::getTuichaMetadata();
+        foreach ($meta->getProperties() as $prop) {
+            $prop->getValue(new stdclass, 'xxx');
+        }
+    }
 }

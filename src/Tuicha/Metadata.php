@@ -175,7 +175,7 @@ class Metadata
         }
 
         if (!$this->idProperty) {
-            $definition = new Property('id', '_id');
+            $definition = new Property($this, 'id', '_id');
 
             $this->phpProperties['id']    = $definition;
             $this->mongoProperties['_id'] = $definition;
@@ -361,7 +361,7 @@ class Metadata
 
         if (is_array($value)) {
             // Change the data type for the element
-            $childDefinition = (new Property(''))->setType($definition ? $definition->getType()->getData('element', new DataType) : new DataType);
+            $childDefinition = (new Property($this, ''))->setType($definition ? $definition->getType()->getData('element', new DataType) : new DataType);
 
             foreach ($value as $key => $val) {
                 $this->serializeValue($propertyName, $val, $childDefinition, $validate);
@@ -458,7 +458,7 @@ class Metadata
      */
     protected function processProperty(ReflectionProperty $reflection)
     {
-        $property = new Property('', '', $reflection);
+        $property = new Property($this, '', '', $reflection);
 
         if (!$property->isPublic() && substr($property->php(), 0, 2) === '__') {
             return;
@@ -531,6 +531,13 @@ class Metadata
      *
      * These functions may also perform some operations needed by Tuicha
      */
+
+    public function ensureObjectType($object)
+    {
+        if (!($object instanceof $this->className)) {
+            throw new InvalidArgumentException("Invalid argument, expecting a '{$this->className}' object");
+        }
+    }
 
     /**
      * Returns the class name associated to this metadata object
@@ -663,6 +670,7 @@ class Metadata
      */
     public function triggerEvent($object, $eventName)
     {
+        $this->ensureObjectType($object);
         if (!empty($this->events[$eventName])) {
             foreach ($this->events[$eventName] as $event) {
                 if ($event['is_public']) {
@@ -719,7 +727,7 @@ class Metadata
         }
 
         if ($type->is('array') || is_array($document)) {
-            $elementType = (new Property(''))->setType($type->getData('element', $type));
+            $elementType = (new Property($this, ''))->setType($type->getData('element', $type));
             foreach ((array)$document as $id => $value) {
                 $document[$id] = $this->hydratate($elementType, $value);
             }
@@ -782,7 +790,7 @@ class Metadata
             if (!empty($this->phpProperties[$key]) ||  !empty($this->mongoProperties[$key])) {
                 $prop = !empty($this->mongoProperties[$key]) ? $this->mongoProperties[$key] : $this->phpProperties[$key];
             } else {
-                $prop = new Property($key);
+                $prop = new Property($this, $key);
             }
 
             $prop->setValue($object, is_scalar($value) ? $value : $this->hydratate($prop, $value));
@@ -875,6 +883,7 @@ class Metadata
      */
     public function snapshot($object)
     {
+        $this->ensureObjectType($object);
         $data = $this->toDocument($object, false, false);
 
         if (!$this->hasTrait) {
@@ -910,6 +919,7 @@ class Metadata
      */
     public function makeReference($object, array $fields = [], $readOnly = false)
     {
+        $this->ensureObjectType($object);
         $reference = [
             '$ref' => $this->getCollectionName(),
             '$id'  => $this->getId($object),
@@ -955,6 +965,8 @@ class Metadata
      */
     public function getSaveCommand($object)
     {
+        $this->ensureObjectType($object);
+
         $document = [
             'connection' => $this->getCollection()->getDatabase()->getConnection(),
             'namespace'  => $this->getCollectionName(true),
@@ -994,6 +1006,8 @@ class Metadata
      */
     public function toDocument($object, $validate = true, $generateId = false)
     {
+        $this->ensureObjectType($object);
+
         $keys = array_keys((array)$object);
         $keys = array_combine($keys, $keys);
         $array = [];
@@ -1044,6 +1058,7 @@ class Metadata
      */
     public function getPropertyValue($object, $property)
     {
+        $this->ensureObjectType($object);
         if (!empty($this->phpProperties[$property])) {
             return $this->phpProperties[$property]->getValue($object);
         } else if (array_key_exists($property, (array)$object)) {

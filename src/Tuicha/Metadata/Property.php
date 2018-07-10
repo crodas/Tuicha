@@ -15,13 +15,15 @@ class Property
     protected $mongoName;
     protected $isDefined = false;
     protected $annotations;
+    protected $metadata;
     protected $validations = [];
     protected $type;
     protected $required = false;
     protected $isPublic = true;
 
-    public function __construct($phpName, $mongoName = null, ReflectionProperty $reflection = null)
+    public function __construct($metadata, $phpName, $mongoName = null, ReflectionProperty $reflection = null)
     {
+        $this->metadata  = $metadata;
         $this->phpName   = $phpName;
         $this->mongoName = $mongoName ?: $phpName;
         $this->type      = $this->type ?: new DataType($mongoName === '_id' ? 'id' : '');
@@ -37,32 +39,6 @@ class Property
 
             $this->parseReflection($reflection);
         }
-    }
-
-    /**
-     * __sleep()
-     *
-     * Serializes the annotations property to speedup the wakeup process. The annotations
-     * is unserialized on demand by the `getAnnotations()` method
-     *
-     * @return array
-     */
-    public function __sleep()
-    {
-        if (!is_string($this->annotations)) {
-            $this->annotations = serialize($this->annotations);
-        }
-
-        return array_keys((array)$this);
-    }
-
-    public function parseReflection(ReflectionProperty $reflection)
-    {
-
-        $this->isPublic    = $reflection->isPublic();
-        $this->required    = $this->annotations->has('required');
-        $this->validations = $this->getAnnotationArguments($this->annotations->get('validate'));
-        $this->type        = $this->parseDataType();
     }
 
     /**
@@ -146,6 +122,35 @@ class Property
     }
 
     /**
+     * __sleep()
+     *
+     * Serializes the annotations property to speedup the wakeup process. The annotations
+     * is unserialized on demand by the `getAnnotations()` method
+     *
+     * @return array
+     */
+    public function __sleep()
+    {
+        if (!is_string($this->annotations)) {
+            $this->annotations = serialize($this->annotations);
+        }
+
+        return array_keys((array)$this);
+    }
+
+    /**
+     * Parses and extract all the property information from the reflection and annotations
+     */
+    public function parseReflection(ReflectionProperty $reflection)
+    {
+
+        $this->isPublic    = $reflection->isPublic();
+        $this->required    = $this->annotations->has('required');
+        $this->validations = $this->getAnnotationArguments($this->annotations->get('validate'));
+        $this->type        = $this->parseDataType();
+    }
+
+    /**
      * Returns the Mongo name of this property
      *
      * @return string
@@ -220,6 +225,7 @@ class Property
      */
     public function getValue(object $object)
     {
+        $this->metadata->ensureObjectType($object);
         if ($this->isPublic) {
             if ($this->isDefined || array_key_exists($this->phpName, (array)$object)) {
                 return $object->{$this->phpName};
@@ -242,6 +248,7 @@ class Property
      */
     public function hasValue(object $object)
     {
+        $this->metadata->ensureObjectType($object);
         return ! $this->isPublic || $this->isDefined || array_key_exists($this->phpName, (array)$object);
     }
 
@@ -251,8 +258,9 @@ class Property
      * @param $object   Object to set the property
      * @param $value    Value to set
      */
-    public function setValue(object $object, $value)
+    public function setValue($object, $value)
     {
+        $this->metadata->ensureObjectType($object);
         if ($this->isPublic) {
             $object->{$this->phpName} = $value;
         } else {
