@@ -148,7 +148,7 @@ class Metadata
         $this->files = [$reflection->getFileName(), __FILE__];
         $collection  = $this->getCollectionNameFromParentClasses($reflection);
         $annotations = $reflection->getAnnotations();
-        $this->hasTrait = in_array(Document::class, $reflection->getTraitNames());
+        $this->hasTrait = $this->checkIfParentHasTrait($reflection);
 
         $this->readScopes($reflection);
 
@@ -235,6 +235,28 @@ class Metadata
         $this->files = array_unique($this->files);
 
         return null;
+    }
+
+    /**
+     * Checks if the current class or any parent class is using the Tuicha\Document trait.
+     *
+     * @param ReflectionClass $reflection Current class reflection object.
+     *
+     * @return bool
+     */
+    protected function checkIfParentHasTrait($reflection)
+    {
+        if (in_array(Document::class, $reflection->getTraitNames())) {
+            return true;
+        }
+
+        while ($reflection = $reflection->getParentClass()) {
+            if (in_array(Document::class, $reflection->getTraitNames())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

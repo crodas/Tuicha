@@ -161,4 +161,12 @@ class MetadataTest extends PHPUnit\Framework\TestCase
             }
         }
     }
+
+    public function testClassHasTrait()
+    {
+        $meta = Docs\Doc1::getTuichaMetadata();
+        $reflection = new ReflectionProperty($meta, 'hasTrait');
+        $reflection->setAccessible(true);
+        $this->assertTrue($reflection->getValue($meta));
+    }
 }

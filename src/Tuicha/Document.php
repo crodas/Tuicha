@@ -62,7 +62,7 @@ trait Document
      *
      * @param array $document
      */
-    public function __setLastInstance(array $document)
+    final public function __setLastInstance(array $document)
     {
         $this->__lastInstance = $document;
         if (!empty($document['_id'])) {
@@ -75,7 +75,7 @@ trait Document
      *
      * @return array
      */
-    public function __getLastInstance()
+    final public function __getLastInstance()
     {
         return $this->__lastInstance;
     }
@@ -281,9 +281,31 @@ trait Document
      *
      * @return bool
      */
-    public function save($wait = true)
+    final public function save($wait = true)
     {
         return Tuicha::save($this, $wait);
+    }
+
+    /**
+     * Creates indexes
+     *
+     * Creates indexes in this collection. All the information is provided by the Metadata object.
+     *
+     * @return MongoDB\Driver\Cursor
+     */
+    final public static function createIndexes()
+    {
+        return Metadata::of(static::class)->createIndexes();
+    }
+
+    /**
+     * Register a class which is listening for events
+     *
+     * @param string $className
+     */
+    final public static function observe($className)
+    {
+        return Metadata::of(static::class)->registerObserver($className);
     }
 
     /**
@@ -308,28 +330,6 @@ trait Document
     public static function resolveRouteBinding($routeKey)
     {
         return static::find(['_id' => $routeKey])->first();
-    }
-
-    /**
-     * Creates indexes
-     *
-     * Creates indexes in this collection. All the information is provided by the Metadata object.
-     *
-     * @return MongoDB\Driver\Cursor
-     */
-    final public static function createIndexes()
-    {
-        return Metadata::of(static::class)->createIndexes();
-    }
-
-    /**
-     * Register a class which is listening for events
-     *
-     * @param string $className
-     */
-    final public static function observe($className)
-    {
-        return Metadata::of(static::class)->registerObserver($className);
     }
 
 }
