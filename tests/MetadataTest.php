@@ -90,11 +90,25 @@ class MetadataTest extends PHPUnit\Framework\TestCase
                 'name' => 'index_name_asc',
             ],
             [
+                'key' => ['__class' => 1, 'name' => 1],
+                'unique' => false,
+                'sparse' => true,
+                'background' => true,
+                'name' => 'index_name_asc_with_class_discriminator',
+            ],
+            [
                 'key' => ['email' => 1],
                 'unique' => true,
                 'sparse' => false,
                 'background' => true,
                 'name' => 'unique_email_asc',
+            ],
+            [
+                'key' => ['__class' => 1, 'email' => 1],
+                'unique' => true,
+                'sparse' => false,
+                'background' => true,
+                'name' => 'unique_email_asc_with_class_discriminator',
             ]
         ], $indexes);
     }

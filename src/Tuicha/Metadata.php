@@ -427,6 +427,11 @@ class Metadata
 
         $index['name'] = implode('_', $name);
         $this->indexes[]= $index;
+        if ($this->singleCollection) {
+            $index['name']  .= '_with_class_discriminator';
+            $index['key']    = array_merge(['__class' => 1], $index['key']);
+            $this->indexes[] = $index;
+        }
     }
 
     /**
