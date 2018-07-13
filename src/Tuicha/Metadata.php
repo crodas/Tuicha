@@ -279,6 +279,8 @@ class Metadata
             $className = get_class($className);
         }
 
+        $className = strtolower($className);
+
         if (empty($loader)) {
             $loader = Remember::wrap('tuicha', function(&$args) {
                 // The object is not in cache or it is not longer valid
@@ -406,7 +408,7 @@ class Metadata
             $value = $meta->toDocument($value, $validate);
             if (!$definition || $definition->getType()->getData('class') !== $class) {
                 // Tuicha must save the object class name to be able to populate it back.
-                $value['__class'] = $class;
+                $value['__class'] = strtolower($class);
             }
         }
 
@@ -807,12 +809,16 @@ class Metadata
     {
         static $reflections = [];
 
-        $class  = empty($document['__class']) ? $this->className : $document['__class'];
-        $_class = strtolower($class);
-        if (empty($reflections[$_class])) {
-            $reflections[$_class] = new ReflectionClass($class);
+        if (!empty($document['__class']) && strtolower($document['__class']) !== $this->className) {
+            return Metadata::of($document['__class'])->newInstance($document, $isNested);
         }
-        $object = $reflections[$_class]->newInstanceWithoutConstructor();
+
+        if (empty($reflections[$this->className])) {
+            $reflections[$this->className] = new ReflectionClass($this->className);
+        }
+
+        $object = $reflections[$this->className]->newInstanceWithoutConstructor();
+
         foreach ($document as $key => $value) {
             if (!empty($this->phpProperties[$key]) ||  !empty($this->mongoProperties[$key])) {
                 $prop = !empty($this->mongoProperties[$key]) ? $this->mongoProperties[$key] : $this->phpProperties[$key];
