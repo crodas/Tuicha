@@ -38,6 +38,7 @@
 namespace Tuicha;
 
 use Tuicha;
+use RuntimeException;
 use Tuicha\Query\Query;
 use MongoDB\BSON\ObjectID;
 
@@ -275,18 +276,6 @@ trait Document
     }
 
     /**
-     * Saves the changes in the current document/object.
-     *
-     * @param boolean $wait
-     *
-     * @return bool
-     */
-    final public function save($wait = true)
-    {
-        return Tuicha::save($this, $wait);
-    }
-
-    /**
      * Creates indexes
      *
      * Creates indexes in this collection. All the information is provided by the Metadata object.
@@ -332,4 +321,62 @@ trait Document
         return static::find(['_id' => $routeKey])->first();
     }
 
+    /**
+     * Saves the changes in the current document/object.
+     *
+     * @param boolean $wait
+     *
+     * @return bool
+     */
+    final public function save($wait = true)
+    {
+        return Tuicha::save($this, $wait);
+    }
+
+    /**
+     * Convert the document instance to an array.
+     *
+     * @return array
+     */
+    public function toArray()
+    {
+        return Metadata::of(static::class)->toDocument($this, false, false);
+    }
+
+    /**
+     * Convert the object into something JSON serializable.
+     *
+     * @return array
+     */
+    public function jsonSerialize()
+    {
+        return $this->toArray();
+    }
+
+    /**
+     * Convert the model instance to JSON string.
+     *
+     * @param  int  $options
+     * @return string
+     *
+     * @throws \RuntimeException
+     */
+    public function toJson($options = 0)
+    {
+        $json = json_encode($this->jsonSerialize(), $options);
+        if (JSON_ERROR_NONE !== json_last_error()) {
+            throw new RuntimeException(json_last_error_msg());
+        }
+        return $json;
+    }
+
+    /**
+     * Convert the model to its string representation.
+     *
+     * @return string
+     */
+    public function __toString()
+    {
+        return $this->toJson();
+    }
 }

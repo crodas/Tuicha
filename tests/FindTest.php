@@ -284,4 +284,47 @@ class FindTest extends PHPUnit\Framework\TestCase
             'type' => 'foo',
         ], User::ofType('foo')->getFilter());
     }
+
+    public function testJsonSerialize()
+    {
+        $x = new User;
+        $x->name = 'foobar';
+        $x->email = uniqid();
+
+        $array = $x->jsonSerialize();
+
+        $this->assertEquals($x->name, $array['name']);
+        $this->assertEquals($x->email, $array['email']);
+    }
+
+    public function testToJson()
+    {
+        $x = new User;
+        $x->name = 'foobar';
+        $x->email = uniqid();
+
+        $json = (string)$x;
+
+        foreach ([$x->name, $x->email] as $prop) {
+            $this->assertTrue(strpos($json, $prop) > 0);
+        }
+    }
+
+    /**
+     * @expectedException RuntimeException
+     */
+    public function testToJsonThrowException()
+    {
+        $x = new User;
+        $x->name = 'foobar';
+        $x->email = new DateTime;
+        $x->extra = [];
+        $last = & $x->extra;
+        for ($i=0; $i < 2800; ++$i) {
+            $last[] = [1, null];
+            $last   = & $last[1];
+        }
+        unset($last);
+        $x->toJson();
+    }
 }
