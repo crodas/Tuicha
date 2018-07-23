@@ -315,6 +315,11 @@ class FindTest extends PHPUnit\Framework\TestCase
      */
     public function testToJsonThrowException()
     {
+        if (defined('HHVM_VERSION')) {
+            $this->markTestSkipped(); // non HHVM
+            return;
+        }
+
         $x = new User;
         $x->name = 'foobar';
         $x->email = new DateTime;
