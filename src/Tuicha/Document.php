@@ -237,8 +237,7 @@ trait Document
      */
     final static function delete($where = null)
     {
-        $metadata = Metadata::of(static::class);
-        $query    = Tuicha::delete($metadata->getCollectionName());
+        $query = Tuicha::delete(static::class);
 
         if ($where !== null) {
             $query->where($where);
