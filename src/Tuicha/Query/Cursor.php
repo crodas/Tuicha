@@ -37,9 +37,10 @@
 namespace Tuicha\Query;
 
 use Tuicha\Fluent\Filter;
+use JsonSerializable;
 use Iterator;
 
-abstract class Cursor extends Filter implements Iterator
+abstract class Cursor extends Filter implements Iterator, JsonSerializable
 {
     protected $queried = false;
     protected $current;
@@ -103,13 +104,18 @@ abstract class Cursor extends Filter implements Iterator
     }
 
 
-    public function __toString()
+    public function jsonSerialize()
     {
         $documents = [];
         foreach ($this as $document) {
             $documents[] = $document->jsonSerialize();
         }
 
-        return json_encode($documents);
+        return $documents;
+    }
+
+    public function __toString()
+    {
+        return json_encode($this->jsonSerialize());
     }
 }
