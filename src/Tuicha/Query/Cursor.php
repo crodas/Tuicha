@@ -102,4 +102,14 @@ abstract class Cursor extends Filter implements Iterator
         return (string)$id;
     }
 
+
+    public function __toString()
+    {
+        $documents = [];
+        foreach ($this as $document) {
+            $documents[] = $document->jsonSerialize();
+        }
+
+        return json_encode($documents);
+    }
 }
