@@ -580,10 +580,26 @@ abstract class Filter
     protected function normalize(Metadata $metadata, array $query)
     {
         foreach ($metadata->getProperties() as $property) {
+            if (!array_key_exists($property->php(), $query) && !array_key_exists($property->mongo(), $query)) {
+                continue;
+            }
+
             if ($property->php() !== $property->mongo() && array_key_exists($property->php(), $query) && !array_key_exists($property->mongo(), $query)) {
                 $query[$property->mongo()] = $query[$property->php()];
                 unset($query[$property->php()]);
             }
+
+            foreach ([$property->php(), $property->mongo()] as $name) {
+                switch ($property->getType()->getType()) {
+                case 'reference':
+                    if (!empty($query[$name])) {
+                        $query[$name . '.$id'] = Metadata::of($query[$name])->getId($query[$name]);
+                        unset($query[$name]);
+                    }
+                    break;
+                }
+            }
+
         }
 
         if (!$metadata->hasOwnCollection()) {

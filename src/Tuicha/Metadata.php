@@ -461,8 +461,14 @@ class Metadata
         } else {
             $order = empty($args['desc']) ? 1 : -1;
         }
+
+        $properties = [$property->mongo() => $order];
+        if ($property->getAnnotations()->has('reference')) {
+            $properties = [$property->mongo() . '.$id' => $order, $property->mongo() . '.$ref' => $order];
+        }
+
         $this->defineIndex([
-            'key' => [$property->mongo() => $order],
+            'key' => $properties,
             'unique' => $index->getName() === 'unique',
             'sparse' => !empty($args['sparse']),
             'background' => true,
