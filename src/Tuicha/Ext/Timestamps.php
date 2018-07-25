@@ -50,10 +50,8 @@ trait Timestamps
      */
     public function _timestampsBeforeCreate()
     {
-        if (Metadata::of($this)->isDirty($this)) {
-            $this->created_at = new Datetime;
-            $this->updated_at = new Datetime;
-        }
+        $this->created_at = new Datetime;
+        $this->updated_at = new Datetime;
     }
 
     /**
@@ -61,8 +59,6 @@ trait Timestamps
      */
     public function _timestampsBeforeUpdate()
     {
-        if (Metadata::of($this)->isDirty($this)) {
-            $this->updated_at = new Datetime;
-        }
+        $this->updated_at = new Datetime;
     }
 }
