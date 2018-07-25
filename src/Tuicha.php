@@ -271,11 +271,18 @@ class Tuicha
     private static function _save($object, $wait)
     {
         $metadata = Metadata::of($object);
+
+        if (!$metadata->isDirty($object)) {
+            // There is nothing to save
+            return;
+        }
+
         $command  = $metadata->getSaveCommand($object);
         $wait     = $wait ? new WriteConcern(WriteConcern::MAJORITY) : null;
 
         // There is nothing to create/update
         if (empty($command['document'])) {
+            // isDirty() failed and Tuicha did not find anything to persist in the database
             return;
         }
 

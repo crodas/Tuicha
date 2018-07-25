@@ -998,7 +998,7 @@ class Metadata
     public function isDirty($object)
     {
         $this->ensureObjectType($object);
-        if ($this->__hasTrait) {
+        if ($this->hasTrait) {
             return $object->isDirty();
         }
 
