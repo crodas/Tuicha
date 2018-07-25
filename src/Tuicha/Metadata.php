@@ -1022,9 +1022,6 @@ class Metadata
         } else {
             $this->triggerEvent($object, 'updating');
             $document['command'] = 'update';
-            $diff = [];
-            $new  = $this->toDocument($object);
-
             $diff = Update::diff($this->toDocument($object), $prevDocument);
 
             $document['selector'] = ['_id' => $prevDocument['_id']];
