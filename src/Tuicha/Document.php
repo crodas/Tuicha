@@ -183,10 +183,10 @@ trait Document
      *
      * @return int
      */
-    final static function count($query = [])
+    final static function count()
     {
         $metadata = Metadata::of(static::class);
-        $q = new Query($metadata, $metadata->getCollection(), $query, []);
+        $q = new Query($metadata, $metadata->getCollection(), func_get_args());
         return $q->count();
     }
 
