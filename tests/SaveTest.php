@@ -27,8 +27,8 @@ class TestSave extends PHPUnit\Framework\TestCase
         $x->some_change = 1;
         $x->save();
         $this->assertNotEquals(
-            $y->updated_at->toDatetime()->format('Y-m-d H:i:s v P'),
-            $x->updated_at->format('Y-m-d H:i:s v P')
+            $y->updated_at->toDatetime()->format('Y-m-d H:i:s P'),
+            $x->updated_at->format('Y-m-d H:i:s P')
         );
 
         sleep(1);
@@ -36,8 +36,8 @@ class TestSave extends PHPUnit\Framework\TestCase
 
         $y = Doc3::find(['_id' => $x->id])->first();
         $this->assertEquals(
-            $y->updated_at->toDatetime()->format('Y-m-d H:i:s v P'),
-            $x->updated_at->format('Y-m-d H:i:s v P')
+            $y->updated_at->toDatetime()->format('Y-m-d H:i:s P'),
+            $x->updated_at->format('Y-m-d H:i:s P')
         );
     }
 
