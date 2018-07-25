@@ -836,7 +836,7 @@ class Metadata
         }
 
         if (!$isNested) {
-            $this->snapshot($object);
+            $this->snapshot($object, $document);
         }
 
         return $object;
@@ -920,10 +920,10 @@ class Metadata
      *
      * @return void
      */
-    public function snapshot($object)
+    public function snapshot($object, array $snapshot = [])
     {
         $this->ensureObjectType($object);
-        $data = $this->toDocument($object, false, false);
+        $data = $snapshot ?: $this->toDocument($object, false, false);
 
         if (!$this->hasTrait) {
             $object->__lastInstance = $data;
@@ -1004,7 +1004,7 @@ class Metadata
             return !empty($document);
         }
 
-        return array_diff($document, $prevDocument) != [];
+        return serialize($document) !== serialize($prevDocument);
     }
 
     /**
@@ -1035,12 +1035,14 @@ class Metadata
 
         if (!$prevDocument) {
             $this->triggerEvent($object, 'creating');
+            $document['snapshot'] = $this->toDocument($object, true, true);
             $document['command']  = 'create';
-            $document['document'] = $this->toDocument($object, true, true);
+            $document['document'] = $document['snapshot'];
         } else {
             $this->triggerEvent($object, 'updating');
+            $document['snapshot'] = $this->toDocument($object, true, true);
             $document['command'] = 'update';
-            $diff = Update::diff($this->toDocument($object), $prevDocument);
+            $diff = Update::diff($document['snapshot'], $prevDocument);
 
             $document['selector'] = ['_id' => $prevDocument['_id']];
             $document['document'] = $diff;

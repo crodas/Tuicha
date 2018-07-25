@@ -304,7 +304,7 @@ class Tuicha
 
         $metadata->triggerEvent($object, 'saved')
             ->triggerEvent($object, $command['command'] === 'create' ? 'created' : 'updated')
-            ->snapshot($object);
+            ->snapshot($object, $command['snapshot']);
 
 
         return $return;
