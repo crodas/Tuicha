@@ -135,7 +135,7 @@ class FindTest extends PHPUnit\Framework\TestCase
     public function testQueryByPHPProperty()
     {
         $doc = Doc1::create(['bar' => 'lolxxx']);
-        $this->assertEquals($doc, Doc1::find(['id' => $doc->id])->first());
+        $this->assertEquals($doc->toArray(), Doc1::find(['id' => $doc->id])->first()->toArray());
         $this->assertEquals('id', Doc1::getKeyName());
         $this->assertEquals('id', $doc->getKeyName());
     }

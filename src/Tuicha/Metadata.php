@@ -768,7 +768,6 @@ class Metadata
             }
         }
 
-
         return $document;
     }
 
@@ -930,6 +929,7 @@ class Metadata
             if (!empty($state['_id'])) {
                 $object->__id = $state['_id'];
             }
+            $object->__version = sha1(serialize($object));
         } else {
             $object->__setLastInstance($data);
         }
@@ -998,13 +998,11 @@ class Metadata
     public function isDirty($object)
     {
         $this->ensureObjectType($object);
-        $prevDocument = $this->getLastState($object);
-        $document     = $this->toDocument($object, false, false);
-        if (!$prevDocument) {
-            return !empty($document);
+        if ($this->__hasTrait) {
+            return $object->isDirty();
         }
 
-        return serialize($document) !== serialize($prevDocument);
+        return !empty($this->__version) || $this->__version !== sha1(serialize($object));
     }
 
     /**

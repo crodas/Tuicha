@@ -53,6 +53,7 @@ trait Document
 {
     private $__lastInstance;
     private $__id;
+    private $__version;
 
     /**
      * Sets the "last Instance" value
@@ -69,6 +70,8 @@ trait Document
         if (!empty($document['_id'])) {
             $this->__id = $document['_id'];
         }
+
+        $this->__version = sha1(serialize($this));
     }
 
     /**
@@ -350,6 +353,16 @@ trait Document
     public function jsonSerialize()
     {
         return $this->toArray();
+    }
+
+    /**
+     * Checks whether an object has changes to persists to the database
+     *
+     * @return bool
+     */
+    public function isDirty()
+    {
+        return $this->__version !== sha1(serialize($this));
     }
 
     /**
