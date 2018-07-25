@@ -37,6 +37,7 @@
 
 namespace Tuicha\Ext;
 
+use Tuicha\Metadata;
 use Datetime;
 
 trait Timestamps
@@ -49,8 +50,10 @@ trait Timestamps
      */
     public function _timestampsBeforeCreate()
     {
-        $this->created_at = new Datetime;
-        $this->updated_at = new Datetime;
+        if (Metadata::of($this)->isDirty($this)) {
+            $this->created_at = new Datetime;
+            $this->updated_at = new Datetime;
+        }
     }
 
     /**
@@ -58,6 +61,8 @@ trait Timestamps
      */
     public function _timestampsBeforeUpdate()
     {
-        $this->updated_at = new Datetime;
+        if (Metadata::of($this)->isDirty($this)) {
+            $this->updated_at = new Datetime;
+        }
     }
 }

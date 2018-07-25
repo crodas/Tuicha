@@ -271,7 +271,7 @@ class Tuicha
     private static function _save($object, $wait)
     {
         $metadata = Metadata::of($object);
-        $command  = $metadata->getSaveCommand($object, true);
+        $command  = $metadata->getSaveCommand($object);
         $wait     = $wait ? new WriteConcern(WriteConcern::MAJORITY) : null;
 
         // There is nothing to create/update

@@ -401,7 +401,7 @@ class Metadata
                     $this->save($value),
                     $definition->getType()->getData('with', []),
                     $definition->getType()->getData('readonly')
-                );
+                )->bsonSerialize();
                 return true;
             }
 
@@ -720,7 +720,7 @@ class Metadata
             foreach ($this->observers as $observer) {
                 foreach (self::$allEvents[$eventName] as $alias) {
                     if (is_callable([$observer, $alias])) {
-                        $observer->$alias($object);
+                        $observer->$alias($object, $event['args']);
                     }
                 }
             }
@@ -991,6 +991,23 @@ class Metadata
     }
 
     /**
+     * Checks whether an object has changes to persists to the database
+     *
+     * @return bool
+     */
+    public function isDirty($object)
+    {
+        $this->ensureObjectType($object);
+        $prevDocument = $this->getLastState($object);
+        $document     = $this->toDocument($object, false, false);
+        if (!$prevDocument) {
+            return !empty($document);
+        }
+
+        return array_diff($document, $prevDocument) != [];
+    }
+
+    /**
      * Returns the command for persisting the current object.
      *
      * This method returns the command that needs to be send to MongoDB to persist
@@ -1015,6 +1032,7 @@ class Metadata
         $prevDocument = $this->getLastState($object);
 
         $this->triggerEvent($object, 'saving');
+
         if (!$prevDocument) {
             $this->triggerEvent($object, 'creating');
             $document['command']  = 'create';
