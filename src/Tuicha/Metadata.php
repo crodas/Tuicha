@@ -900,12 +900,27 @@ class Metadata
     /**
      * Returns the Document ID of an object.
      *
+     * @param object $object
+     *
      * @return mixed
      */
     public function getId($object)
     {
         $property = $this->phpProperties[$this->idProperty];
         return $property->getValue($object);
+    }
+
+    /**
+     * Sets the Document ID to an object.
+     *
+     * @param object $object
+     * @param mixed  $id
+     *
+     * @return void
+     */
+    public function setId($object, $id)
+    {
+        $this->phpProperties[$this->idProperty]->setValue($object, $id);
     }
 
     /**

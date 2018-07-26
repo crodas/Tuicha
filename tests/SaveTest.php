@@ -244,9 +244,13 @@ class TestSave extends PHPUnit\Framework\TestCase
 
     public function testAutoincrement()
     {
-        $this->assertEquals(1, Autoincrement::next('foo'));
-        $this->assertEquals(2, Autoincrement::next('foo'));
-        $this->assertEquals(3, Autoincrement::next('foo'));
-        $this->assertEquals(1, Autoincrement::next('bar'));
+        $x = [];
+        for($i=1; $i <= 5; ++$i) {
+            $x[$i] = new Autoincrement();
+            $x[$i]->save();
+        }
+        $this->assertEquals(1, $x[1]->id);
+        $this->assertEquals(2, $x[2]->id);
+        $this->assertEquals(5, $x[5]->id);
     }
 }
