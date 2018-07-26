@@ -926,8 +926,8 @@ class Metadata
 
         if (!$this->hasTrait) {
             $object->__lastInstance = $data;
-            if (!empty($state['_id'])) {
-                $object->__id = $state['_id'];
+            if (!empty($data['_id'])) {
+                $object->__id = $data['_id'];
             }
             $object->__version = sha1(serialize($object));
         } else {

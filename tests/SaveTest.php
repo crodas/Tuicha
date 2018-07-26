@@ -241,4 +241,12 @@ class TestSave extends PHPUnit\Framework\TestCase
         $this->assertFalse(is_array($z->random));
 
     }
+
+    public function testAutoincrement()
+    {
+        $this->assertEquals(1, Autoincrement::next('foo'));
+        $this->assertEquals(2, Autoincrement::next('foo'));
+        $this->assertEquals(3, Autoincrement::next('foo'));
+        $this->assertEquals(1, Autoincrement::next('bar'));
+    }
 }

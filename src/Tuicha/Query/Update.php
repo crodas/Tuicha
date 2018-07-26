@@ -223,6 +223,28 @@ class Update extends Modify
         return $this->update;
     }
 
+    public function findAndModify($upsert = null, $new = null)
+    {
+        $wait    = true;
+        $options = array_merge($this->options, array_filter(compact('wait', 'upsert', 'new'), 'is_bool'));
+
+
+        $wConcern = new WriteConcern($options['wait'] ? WriteConcern::MAJORITY : '');
+
+        $result = Tuicha::command([
+            'findAndModify' => $this->collection,
+            'query'  => (object)$this->getFilter(),
+            'update' => $this->update,
+            'upsert' => $options['upsert'],
+            'new'    => $options['new'],
+            'writeConcern' => $wConcern,
+        ]);
+
+        return array_map(function($row) {
+            return $row->value;
+        }, $result->toArray());
+    }
+
     /**
      * Executes the operation.
      *
