@@ -34,6 +34,8 @@ trait AutoincrementID
      */
     public function set_autoincrement_id()
     {
-        Metadata::of($this)->setId($this, AutoincrementProvider::next(strtolower(static::class)));
+        $metadata   = Metadata::of($this);
+        $collection = $metadata->getCollection();
+        $metadata->setId($this, AutoincrementProvider::next($collection));
     }
 }
