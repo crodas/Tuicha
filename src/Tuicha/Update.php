@@ -107,7 +107,7 @@ class Update
     {
         $diff = [];
         foreach ($new as $key => $value) {
-            if (empty($prevDocument[$key])) {
+            if (!array_key_exists($key, $prevDocument)) {
                 $diff['$set'][$key] = $value;
             } elseif ($value !== $prevDocument[$key]) {
                 foreach (self::calculateDifferences($key, $value, $prevDocument[$key]) as $operation) {

@@ -95,7 +95,6 @@ class TestSave extends PHPUnit\Framework\TestCase
         $this->assertEquals('update', $update['command']);
         $this->assertEquals(['$set' => [
             'x.1' => ['foo' => 'bar', '__class' => 'stdclass'],
-            'user' => null,
         ]], $update['document']);
 
         $x->save();
@@ -106,7 +105,6 @@ class TestSave extends PHPUnit\Framework\TestCase
         $this->assertEquals('update', $update['command']);
         $this->assertEquals(['$set' => [
             'x.1.lol' => 'lol',
-            'user' => null,
         ]], $update['document']);
         $x->save();
 
@@ -119,7 +117,6 @@ class TestSave extends PHPUnit\Framework\TestCase
         $this->assertEquals('update', $update['command']);
         $this->assertEquals(['$set' => [
             'x.1.xxx' => 'xxx',
-            'user' => null,
         ]], $update['document']);
         $y->save();
 
@@ -127,9 +124,7 @@ class TestSave extends PHPUnit\Framework\TestCase
         unset($y->x[1]->xxx);
         $update = Metadata::of($y)->getSaveCommand($y);
         $this->assertEquals('update', $update['command']);
-        $this->assertEquals(['$set' => [
-            'user' => null,
-        ], '$unset' => [
+        $this->assertEquals(['$unset' => [
             'x.1.xxx' => 1,
         ]], $update['document']);
         $y->save();
