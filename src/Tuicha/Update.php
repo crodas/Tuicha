@@ -90,6 +90,10 @@ class Update
                 $changes[] = ['$pullAll', $property, array_values($diff['remove'])];
             }
 
+        } else if (serialize($old) === serialize($new)) {
+            // Use serialize() for a better comparison (objects for instance)
+            // If nothing changed, then it should return an empty array
+            return [];
         }
 
         return $changes ?: [['$set', $property, $new]];
