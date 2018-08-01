@@ -944,7 +944,7 @@ class Metadata
             if (!empty($data['_id'])) {
                 $object->__id = $data['_id'];
             }
-            $object->__version = sha1(serialize($object));
+            $object->__version = sha1(serialize($data));
         } else {
             $object->__setLastInstance($data);
         }
@@ -1017,7 +1017,7 @@ class Metadata
             return $object->isDirty();
         }
 
-        return !empty($this->__version) || $this->__version !== sha1(serialize($object));
+        return !empty($this->__version) || $this->__version !== sha1(serialize($this->toDocument($object, false, false)));
     }
 
     /**

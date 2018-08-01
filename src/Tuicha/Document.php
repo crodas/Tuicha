@@ -71,7 +71,7 @@ trait Document
             $this->__id = $document['_id'];
         }
 
-        $this->__version = sha1(serialize($this));
+        $this->__version = sha1(serialize($document));
     }
 
     /**
@@ -362,7 +362,7 @@ trait Document
      */
     public function isDirty()
     {
-        return $this->__version !== sha1(serialize($this));
+        return $this->__version !== sha1(serialize($this->toArray()));
     }
 
     /**

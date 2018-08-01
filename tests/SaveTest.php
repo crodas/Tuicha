@@ -128,6 +128,10 @@ class TestSave extends PHPUnit\Framework\TestCase
             'x.1.xxx' => 1,
         ]], $update['document']);
         $y->save();
+
+        $this->assertFalse($y->isDirty());
+        $y->lol = true;
+        $this->assertTrue($y->isDirty());
     }
 
     public function testSaveSerializableInterface()
