@@ -398,7 +398,7 @@ class Metadata
             $meta  = Metadata::of($class);
             if ($definition && $definition->getType()->is('reference')) {
                 $value = $meta->makeReference(
-                    $this->save($value),
+                    $value,
                     $definition->getType()->getData('with', []),
                     $definition->getType()->getData('readonly')
                 )->bsonSerialize();
@@ -978,6 +978,11 @@ class Metadata
             '$ref' => $this->getCollectionName(),
             '$id'  => $this->getId($object),
         ];
+
+        if (empty($reference['$id'])) {
+            $this->save($object);
+            $reference['$id'] = $this->getId($object);
+        }
 
         if (!empty($fields)) {
             $reference['__cache'] = [];
