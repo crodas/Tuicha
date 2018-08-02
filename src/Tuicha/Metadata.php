@@ -386,6 +386,9 @@ class Metadata
         if (is_array($value)) {
             // Change the data type for the element
             $childDefinition = (new Property($this, ''))->setType($definition ? $definition->getType()->getData('element', new DataType) : new DataType);
+            if ($definition && $definition->getType()->is('array')) {
+                $value = array_values($value);
+            }
 
             foreach ($value as $key => $val) {
                 $this->serializeValue($propertyName, $val, $childDefinition, $validate);

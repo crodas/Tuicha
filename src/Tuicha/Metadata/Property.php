@@ -92,6 +92,7 @@ class Property
             $type->addData('class', strtolower($annotation->getArg()));
             break;
         case 'array':
+        case 'hash':
             try {
                 $type->addData('element', $this->getDataTypeFromAnnotation($annotation->getArg()));
             } catch (RuntimeException $e) {
