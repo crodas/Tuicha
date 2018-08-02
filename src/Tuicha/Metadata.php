@@ -761,9 +761,10 @@ class Metadata
             return Metadata::of($type->getData('class'))->newInstance((array)$document, $isNested);
         }
 
-        if ($type->is('array') || is_array($document)) {
+        if ($type->is('array') || $type->is('hash') || is_array($document)) {
             $elementType = (new Property($this, ''))->setType($type->getData('element', $type));
-            foreach ((array)$document as $id => $value) {
+            $document    = $type->is('array') ? array_values((array) $document) : (array) $document;
+            foreach ($document as $id => $value) {
                 $document[$id] = $this->hydratate($elementType, $value);
             }
         }

@@ -116,7 +116,7 @@ class Property
      */
     protected function parseDataType()
     {
-        $types = 'int,integer,float,double,array,bool,boolean,string,object,class,type,id,reference';
+        $types = 'int,integer,float,double,hash,array,bool,boolean,string,object,class,type,id,reference';
         if ($annotation = $this->annotations->getOne($types)) {
             return $this->getDataTypeFromAnnotation($annotation);
         }

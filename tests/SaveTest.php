@@ -2,6 +2,7 @@
 
 use Tuicha\Metadata;
 use Docs\Doc1;
+use Docs\Doc2;
 use Docs\Doc3;
 use MongoDB\BSON\ObjectID;
 
@@ -239,6 +240,19 @@ class TestSave extends PHPUnit\Framework\TestCase
         $z = User::find(['id' => $x->id])->first();
         $this->assertFalse(is_array($z->random));
 
+    }
+
+
+    public function testArrayAndHash()
+    {
+        $doc = new Doc2;
+        $doc->array = ['foo' => 1, 'bar' => 2];
+        $doc->hash = ['foo' => 1, 'bar' => 2];
+        $doc->save();
+
+        $doc = Doc2::where('id', $doc->id)->firstOrFail();
+        $this->assertEquals([1, 2], $doc->array);
+        $this->assertEquals(['foo' => 1, 'bar' => 2], $doc->hash);
     }
 
     public function testAutoincrement()
