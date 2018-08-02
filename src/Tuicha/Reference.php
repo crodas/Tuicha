@@ -39,6 +39,7 @@ namespace Tuicha;
 
 use RuntimeException;
 use MongoDB\BSON\Serializable;
+use JsonSerializable;
 use Tuicha;
 
 /**
@@ -52,7 +53,7 @@ use Tuicha;
  * be reflected in the referenced document.
  *
  */
-class Reference implements Serializable
+class Reference implements Serializable, JsonSerializable
 {
     protected $ref;
     protected $id;
@@ -60,6 +61,16 @@ class Reference implements Serializable
     protected $cache = [];
     protected $properties;
     protected $readOnly;
+
+    /**
+     * Convert the object into something JSON serializable.
+     *
+     * @return array
+     */
+    public function jsonSerialize()
+    {
+        return $this->getObject();
+    }
 
     /**
      * Serializes the reference object.
