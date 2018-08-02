@@ -59,6 +59,7 @@ class Tuicha
 {
     protected static $connections = [];
     protected static $autoload = [];
+    protected static $collections = [];
     protected static $dirs = [];
     protected static $autoload_loaded = false;
     protected static $saving = [];
@@ -347,8 +348,9 @@ class Tuicha
             return array_filter($classes);
         });
 
-        self::$autoload = array_merge($loader($directory), self::$autoload);
-        self::$dirs[]   = $directory;
+        self::$autoload    = array_merge($loader($directory), self::$autoload);
+        self::$collections = [];
+        self::$dirs[]      = $directory;
 
         if (!self::$autoload_loaded) {
             spl_autoload_register(__CLASS__ . '::autoloader');
@@ -406,9 +408,11 @@ class Tuicha
             return array_combine($collections, $classes);
         });
 
-        $collectionsClasses = $loader(array_keys(self::$autoload));
+        if (empty(self::$collections)) {
+            self::$collections = $loader(array_keys(self::$autoload));
+        }
 
-        return empty($collectionsClasses[$collection]) ? false : $collectionsClasses[$collection];
+        return empty(self::$collections[$collection]) ? false : self::$collections[$collection];
     }
 
     /**
