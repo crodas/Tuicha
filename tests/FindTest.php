@@ -320,6 +320,8 @@ class FindTest extends PHPUnit\Framework\TestCase
             return;
         }
 
+        ini_set('xdebug.max_nesting_level', 3000);
+
         $x = new User;
         $x->name = 'foobar';
         $x->email = new DateTime;
