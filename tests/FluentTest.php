@@ -9,7 +9,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
         $query = User::find();
         $query->email = 'foobar@gmail.com';
 
-        $this->assertEquals(['email' => 'foobar@gmail.com'], $query->getFilter());
+        $this->assertEquals((object)['email' => 'foobar@gmail.com'], $query->getFilter());
     }
 
     public function testFluentWithDynamicSetStr()
@@ -17,7 +17,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
         $query = User::find();
         $query->{'x.email'} = 'foobar@gmail.com';
 
-        $this->assertEquals(['x.email' => 'foobar@gmail.com'], $query->getFilter());
+        $this->assertEquals((object)['x.email' => 'foobar@gmail.com'], $query->getFilter());
     }
 
     public function testFluentWithDynamicNested()
@@ -25,7 +25,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
         $query = User::find();
         $query->x->email = 'foobar@gmail.com';
 
-        $this->assertEquals(['x.email' => 'foobar@gmail.com'], $query->getFilter());
+        $this->assertEquals((object)['x.email' => 'foobar@gmail.com'], $query->getFilter());
     }
 
     public function testEmpty()
@@ -51,7 +51,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
         $query = User::find();
         $query->x->y->email->is('foobar@gmail.com');
 
-        $this->assertEquals(['x.y.email' => 'foobar@gmail.com'], $query->getFilter());
+        $this->assertEquals((object)['x.y.email' => 'foobar@gmail.com'], $query->getFilter());
     }
 
     public function testFluentWithDynamicSetArray()
@@ -59,7 +59,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
         $query = User::find();
         $query['x.email'] = 'foobar@gmail.com';
 
-        $this->assertEquals(['x.email' => 'foobar@gmail.com'], $query->getFilter());
+        $this->assertEquals((object)['x.email' => 'foobar@gmail.com'], $query->getFilter());
     }
 
     public function testWhere()
@@ -68,7 +68,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
         $query->where('email', 'foobar@gmail.com')
             ->where('size', '$gt', 10);
 
-        $this->assertEquals([
+        $this->assertEquals((object)[
             'email' => 'foobar@gmail.com',
             'size'  => ['$gt' => 10],
         ], $query->getFilter());
@@ -80,7 +80,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
         $query->email->is('foobar@gmail.com')
             ->size->gt(10);
 
-        $this->assertEquals([
+        $this->assertEquals((object)[
             'email' => 'foobar@gmail.com',
             'size'  => ['$gt' => 10],
         ], $query->getFilter());
@@ -92,7 +92,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
         $query->email->is('foobar@gmail.com')
             ->size->between(5, 10);
 
-        $this->assertEquals([
+        $this->assertEquals((object)[
             'email' => 'foobar@gmail.com',
             'size'  => ['$gte' => 5, '$lte' => 10],
         ], $query->getFilter());
@@ -101,7 +101,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
     public function testSize()
     {
         $query = User::find()->prop->size(5);
-        $this->assertEquals([
+        $this->assertEquals((object)[
             'prop'  => ['$size' => 5],
         ], $query->getFilter());
     }
@@ -109,7 +109,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
     public function testType()
     {
         $query = User::find()->prop->type('double');
-        $this->assertEquals([
+        $this->assertEquals((object)[
             'prop'  => ['$type' => 'double'],
         ], $query->getFilter());
     }
@@ -117,7 +117,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
     public function testExists()
     {
         $query = User::find()->prop->exists();
-        $this->assertEquals([
+        $this->assertEquals((object)[
             'prop'  => ['$exists' => true],
         ], $query->getFilter());
     }
@@ -127,7 +127,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
         $query = User::find();
         $query->email->isNot('foobar@gmail.com');
 
-        $this->assertEquals(['email' => ['$ne' => 'foobar@gmail.com']], $query->getFilter());
+        $this->assertEquals((object)['email' => ['$ne' => 'foobar@gmail.com']], $query->getFilter());
     }
 
     public function testAll()
@@ -135,7 +135,9 @@ class FluentTest extends PHPUnit\Framework\TestCase
         $query = User::find();
         $query->email->all(['foobar@gmail.com', 'bar@gmail.com']);
 
-        $this->assertEquals(['email' => ['$all' => ['foobar@gmail.com', 'bar@gmail.com']]], $query->getFilter());
+        $this->assertEquals((object)[
+            'email' => ['$all' => ['foobar@gmail.com', 'bar@gmail.com']]
+        ], $query->getFilter());
     }
 
     public function testIn()
@@ -143,7 +145,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
         $query = User::find();
         $query->email->in(['foobar@gmail.com', 'bar@gmail.com']);
 
-        $this->assertEquals(['email' => ['$in' => ['foobar@gmail.com', 'bar@gmail.com']]], $query->getFilter());
+        $this->assertEquals((object)['email' => ['$in' => ['foobar@gmail.com', 'bar@gmail.com']]], $query->getFilter());
     }
 
     public function testNotIn()
@@ -151,7 +153,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
         $query = User::find();
         $query->email->notIn(['foobar@gmail.com', 'bar@gmail.com']);
 
-        $this->assertEquals(['email' => ['$nin' => ['foobar@gmail.com', 'bar@gmail.com']]], $query->getFilter());
+        $this->assertEquals((object)['email' => ['$nin' => ['foobar@gmail.com', 'bar@gmail.com']]], $query->getFilter());
     }
 
     public function testOrLogicBlock()
@@ -164,7 +166,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
                 $q->is_admin = 1;
             });
 
-        $this->assertEquals([
+        $this->assertEquals((object)[
             '$or' => [
                 ['is_active' => 1, 'is_allowed' => 1],
                 ['is_admin' => 1],
@@ -182,7 +184,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
                 $q->is_admin = 1;
             });
 
-        $this->assertEquals([
+        $this->assertEquals((object)[
             '$or' => [
                 ['is_active' => 1, 'is_allowed' => 1],
                 ['is_admin' => 1],
@@ -200,7 +202,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
                 $q->is_admin = 1;
             });
 
-        $this->assertEquals([
+        $this->assertEquals((object)[
             '$and' => [
                 ['is_active' => 1, 'is_allowed' => 1],
                 ['is_admin' => 1],
@@ -218,7 +220,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
                 $q->is_admin = 1;
             });
 
-        $this->assertEquals([
+        $this->assertEquals((object)[
             '$and' => [
                 ['is_active' => 1, 'is_allowed' => 1],
                 ['is_admin' => 1],
@@ -236,7 +238,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
                 $q->is_admin = 1;
             });
 
-        $this->assertEquals([
+        $this->assertEquals((object)[
             '$nor' => [
                 ['is_active' => 1, 'is_allowed' => 1],
                 ['is_admin' => 1],
@@ -254,7 +256,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
                 $q->is_admin = 1;
             });
 
-        $this->assertEquals([
+        $this->assertEquals((object)[
             '$nor' => [
                 ['is_active' => 1, 'is_allowed' => 1],
                 ['is_admin' => 1],
@@ -274,7 +276,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
                 $q->yyy->lte(5);
             });
 
-        $this->assertEquals([
+        $this->assertEquals((object)[
             '$and' => [
                 ['age' => ['$gte' => 5], 'xxx' => ['$gte' => 5]],
                 ['age' => ['$lte' => 99], 'xxx' => ['$lt' => 5], 'yyy' => ['$lte' => 5]],
@@ -285,13 +287,13 @@ class FluentTest extends PHPUnit\Framework\TestCase
     public function testWhereNoDollar()
     {
         $query = User::find()->where('foo', 'nin', [1,2]);
-        $this->assertEquals(['foo' => ['$nin' => [1,2]]], $query->getFilter());
+        $this->assertEquals((object)['foo' => ['$nin' => [1,2]]], $query->getFilter());
     }
 
     public function testElemMatch()
     {
         $query = User::find()->foo->elemMatch(['foo' => 'bar']);
-        $this->assertEquals(['foo' => ['$elemMatch' => ['foo' => 'bar']]], $query->GetFilter());
+        $this->assertEquals((object)['foo' => ['$elemMatch' => ['foo' => 'bar']]], $query->GetFilter());
 
         $query1 = User::find()->foo->elemMatch(['foo' => 'bar']);
         $query2 = User::find()->foo->elementMatch(['foo' => 'bar']);
@@ -303,7 +305,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
         $query = User::find()->not(function($q) {
             $q->f = 1;
         });
-        $this->assertEquals(['f' => ['$not' => 1]], $query->getFilter());
+        $this->assertEquals((object)['f' => ['$not' => 1]], $query->getFilter());
     }
 
     /**
@@ -330,7 +332,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
     public function testWhereFieldName()
     {
         $q = Doc1::find()->where('foo')->is(1);
-        $this->AssertEquals(['foo' => ['$in' => [1, '1']]], $q->getFilter());
+        $this->AssertEquals((object)['foo' => ['$in' => [1, '1']]], $q->getFilter());
     }
 
     /**
@@ -344,7 +346,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
     public function testFindWithWhere()
     {
         $this->assertEquals(
-            ['foo' => 'bar'],
+            (object)['foo' => 'bar'],
             Doc1::where('foo', 'bar')->getFilter()
         );
     }
@@ -352,7 +354,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
     public function testFindWithFind()
     {
         $this->assertEquals(
-            ['foo' => 'bar'],
+            (object)['foo' => 'bar'],
             Doc1::find('foo', 'bar')->getFilter()
         );
     }
@@ -360,7 +362,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
     public function testFindWithEmptyInit()
     {
         $this->assertEquals(
-            ['foo' => 'bar'],
+            (object)['foo' => 'bar'],
             Doc1::find()->where('foo', 'bar')->getFilter()
         );
     }
@@ -368,7 +370,7 @@ class FluentTest extends PHPUnit\Framework\TestCase
     public function testFindWithGte()
     {
         $this->assertEquals(
-            ['foo' => ['$gte' => 'bar']],
+            (object)['foo' => ['$gte' => 'bar']],
             Doc1::where('foo', '>=', 'bar')->getFilter()
         );
     }

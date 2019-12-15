@@ -577,7 +577,7 @@ abstract class Filter
      *
      * @return array
      */
-    protected function normalize(Metadata $metadata, array $query)
+    protected function normalize(Metadata $metadata, array $query): \stdClass
     {
         foreach ($metadata->getProperties() as $property) {
             if (!array_key_exists($property->php(), $query) && !array_key_exists($property->mongo(), $query)) {
@@ -619,7 +619,7 @@ abstract class Filter
      *
      * @return array
      */
-    protected function normalizeDataTypes(array $query)
+    protected function normalizeDataTypes(array $query): \stdClass
     {
         foreach ($query as $key => $value) {
             if (!is_scalar($value)) {
@@ -633,6 +633,6 @@ abstract class Filter
             }
         }
 
-        return $query;
+        return (object) $query;
     }
 }
