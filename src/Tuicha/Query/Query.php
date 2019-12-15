@@ -86,13 +86,13 @@ class Query extends Cursor implements ArrayAccess
         return parent::__call($function, $args);
     }
 
-    public function getFilter()
+    public function getFilter(): \stdClass
     {
         if ($this->metadata) {
             return $this->normalize($this->metadata, $this->filter);
         }
 
-        return $this->filter;
+        return (object) $this->filter;
     }
 
     protected function getQueryOptions()

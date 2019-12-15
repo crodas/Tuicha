@@ -266,21 +266,21 @@ class FindTest extends PHPUnit\Framework\TestCase
     public function testLocalScope()
     {
         $q = User::find()->teens();
-        $this->assertEquals([
+        $this->assertEquals((object) [
             'age' => ['$gt' => 18, '$lt' => 30]
         ], $q->getFilter());
     }
 
     public function testLocalScopeStaticInterface()
     {
-        $this->assertEquals([
+        $this->assertEquals((object)[
             'age' => ['$gt' => 18, '$lt' => 30]
         ], User::teens()->getFilter());
     }
 
     public function testLocalScopeWithArgument()
     {
-        return $this->assertEquals([
+        return $this->assertEquals((object)[
             'type' => 'foo',
         ], User::ofType('foo')->getFilter());
     }
@@ -319,6 +319,8 @@ class FindTest extends PHPUnit\Framework\TestCase
             $this->markTestSkipped(); // non HHVM
             return;
         }
+
+        ini_set('xdebug.max_nesting_level', 3000);
 
         $x = new User;
         $x->name = 'foobar';

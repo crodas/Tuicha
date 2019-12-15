@@ -15,7 +15,7 @@
         }
     },
     "require": {
-        "php": ">=5.5.0",
+        "php": ">=7.0",
         "ext-mongodb": ">=1.0.0",
         "crodas/remember": ">=0.4.2",
         "crodas/notoj": ">=1.6",

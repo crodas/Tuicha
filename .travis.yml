@@ -4,13 +4,11 @@ sudo: required
 dist: trusty
 
 php:
-  - 5.5
-  - 5.6
   - 7.0
   - 7.1
-  - hhvm-3.12
-  - hhvm-3.15
-  
+  - 7.2
+  - 7.3
+  - 7.4
 env:
   global:
     - KEY_SERVER="hkp://keyserver.ubuntu.com:80"
@@ -25,6 +23,14 @@ env:
 matrix:
   fast_finish: true
   include:
+    - php: 7.4
+      env: DRIVER_VERSION=devel SERVER_VERSION=3.6
+    - php: 7.4
+      env: DRIVER_VERSION=1.4.2 SERVER_VERSION=3.2
+    - php: 7.3
+      env: DRIVER_VERSION=devel SERVER_VERSION=3.6
+    - php: 7.3
+      env: DRIVER_VERSION=1.4.2 SERVER_VERSION=3.2
     - php: 7.2
       env: DRIVER_VERSION=devel SERVER_VERSION=3.6
     - php: 7.2
@@ -41,11 +47,6 @@ matrix:
       env: DRIVER_VERSION=devel SERVER_VERSION=3.4
     - php: 7.0
       env: DRIVER_VERSION=devel SERVER_VERSION=3.6
-  exclude:
-    - php: 5.5
-      env: DRIVER_VERSION=stable SERVER_VERSION=2.6
-    - php: 5.5
-      env: DRIVER_VERSION=stable SERVER_VERSION=3.0
 
 before_install:
   - ./.travis.sh
