@@ -92,6 +92,14 @@ class Tuicha
      */
     public static function getConnection($connectionName = 'default'): Database
     {
+        if ($connectionName instanceof Database) {
+            return $connectionName;
+        }
+
+        if ($connectionName === null) {
+            $connectionName = 'default';
+        }
+
         if (empty(self::$connections[$connectionName])) {
             throw new RuntimeException("Cannot find connection {$connectionName}");
         }
@@ -205,16 +213,8 @@ class Tuicha
             $command = new Command($command);
         }
 
-        if (is_string($connection)) {
-            $connection = self::getConnection($connection);
-        }
-
-        $connection = $connection ?: self::getConnection();
-        if ($connection instanceof Collection) {
-            $connection = $connection->getDatabase();
-        }
-
-        return $connection->execute($command);
+        return self::getConnection($connection)
+            ->execute($command);
     }
 
     /**
