@@ -90,7 +90,7 @@ class Tuicha
      *
      * @return Array
      */
-    public static function getConnection($connectionName = 'default')
+    public static function getConnection($connectionName = 'default'): Database
     {
         if (empty(self::$connections[$connectionName])) {
             throw new RuntimeException("Cannot find connection {$connectionName}");
@@ -220,7 +220,7 @@ class Tuicha
     /**
      * Saves an object into MongoDB.
      *
-     * Saves an object into MongoDB. This function will save any object, even objects without 
+     * Saves an object into MongoDB. This function will save any object, even objects without
      * any metadata nor trait inheratance. In those cases the default data will be used.
      *
      * This save function will perform either an insert or an update if the object was created
@@ -367,7 +367,7 @@ class Tuicha
      * may cache some properties. These cached properties will be stored in the reference structure.
      *
      * Cached properties are helpful to avoid dereferencing (loading the referenced document from the database)
-     * when reading the property. lease notice that Tuicha does not update the cached properties should the 
+     * when reading the property. lease notice that Tuicha does not update the cached properties should the
      * object is updated.
      *
      * Optionally references may be flagged as 'read-only'. That means that any modifications will be ignored, by
